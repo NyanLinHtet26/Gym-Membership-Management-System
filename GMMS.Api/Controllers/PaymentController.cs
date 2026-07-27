@@ -1,12 +1,15 @@
 ﻿using GMMS.Domain.Features.Payment;
 using GMMS.Domain.Features.Payment.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMMS.Api.Controllers
 {
+    
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PaymentController : BaseController
     {
         private readonly PaymentService _paymentService;

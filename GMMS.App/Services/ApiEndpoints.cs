@@ -9,7 +9,7 @@
         public const string UpdateMember = "api/Member/{id}";
         public const string DeleteMember = "api/Member/{id}";
         #endregion
-#region Membership Endpoints
+        #region Membership Endpoints
         public const string MembershipList = "api/MemberShip";
         public const string MembershipListAll = "api/MemberShip/all";
         public const string MembershipDetails = "api/MemberShip/{id}";
@@ -35,6 +35,12 @@
         public const string PaymentList = "api/Payment";
         public const string PaymentDetails = "api/Payment/{id}";
         public const string CreatePayment = "api/Payment";
+        #endregion
+        #region Auth
+
+        public const string Login = "api/Auth/login";
+        public const string ChangePassword = "api/Auth/change-password";
+
         #endregion
     }
 }

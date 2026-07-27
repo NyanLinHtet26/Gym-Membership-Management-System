@@ -1,4 +1,6 @@
-﻿namespace GMMS.App.Services
+﻿using Azure;
+
+namespace GMMS.App.Services
 {
     public class ApiService
     {
@@ -163,6 +165,20 @@
             return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.CreatePayment, request));
         }
         #endregion
+
+        #region Auth
+
+        public async Task<TResponse?> LoginAsync<TRequest, TResponse> (TRequest request)
+        {
+            return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.Login, request));
+        }
+
+        public async Task<TResponse?> ChangePasswordAsync<TRequest, TResponse>(TRequest request)
+        {
+            return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.ChangePassword,request));
+        }
+        #endregion
+
 
         private async Task<TResponse?> ExecuteAsync<TResponse>(Func<Task<TResponse?>> action)
         {

@@ -99,6 +99,19 @@ try
          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)),
          ClockSkew = TimeSpan.Zero
      };
+     options.Events = new JwtBearerEvents
+     {
+         OnMessageReceived = context =>
+         {
+             var token = context.Request.Cookies["AcessToken"];
+
+             if (!string.IsNullOrEmpty(token))
+             {
+                 context.Token = token;
+             }
+             return Task.CompletedTask;
+         }
+     };
  });
 
  builder.Services.AddAuthorization();

@@ -1,12 +1,15 @@
 ﻿using GMMS.Domain.Features.Member;
 using GMMS.Domain.Features.Member.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMMS.Api.Controllers
 {
+    
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class MemberController : BaseController
     {
         private readonly MemberService _memberService;

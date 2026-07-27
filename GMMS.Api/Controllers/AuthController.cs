@@ -25,15 +25,36 @@ namespace GMMS.Api.Controllers
             _logger.LogInformation("Login API called. UserName={UserName}", request.UserName);
 
             var result = await _authService.Login(request);
-            if (result.IsSuccess)
+
+            if (!result.IsSuccess)
             {
-                _logger.LogInformation("Login API completed successfully. UserName={UserName}", request.UserName);
+                _logger.LogWarning("Login APT failed. Username = {UserName} ",request.UserName);
+                return Execute(result);
             }
-            else
+            Response.Cookies.Append("AcessToken", 
+                result.Data!.AccessToken,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = result.Data.User.ExpiresAt
+                });
+            _logger.LogInformation("Cookie created");
+            _logger.LogInformation("Login Api completely Sucessfully. UserName={UserName}",request.UserName);
+
+            //return Execute(result);
+
+            return Ok(new
             {
-                _logger.LogWarning("Login API failed. UserName={UserName}, Message={Message}", request.UserName, result.Message);
-            }
-            return Execute(result);
+                isSuccess = true,
+                message = "Login successful.",
+                data = result.Data.User
+            });
+
+
+
+
         }
 
         [Authorize]

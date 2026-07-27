@@ -33,7 +33,7 @@ public class AuthService
         _logger = logger;
     }
 
-    public async Task <Result<LoginResponseModel>> Login(LoginRequestModel request)
+    public async Task <Result<LoginResultModel>> Login(LoginRequestModel request)
     {
         _logger.LogInformation("Login attempt for UserName: {UserName}", request.UserName);
 
@@ -41,7 +41,7 @@ public class AuthService
         if (!validationResult.IsValid)
         {
             _logger.LogWarning("Invalid login request for UserName: {UserName}. Errors: {Errors}", request.UserName, string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage)));
-            return new Result<LoginResponseModel>
+            return new Result<LoginResultModel>
             {
                 IsSuccess = false,
                 Message = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage))
@@ -55,20 +55,23 @@ public class AuthService
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 _logger.LogWarning("Login failed for UserName: {UserName} - invalid credentials.", request.UserName);
-                return new Result<LoginResponseModel>
+                return new Result<LoginResultModel>
                 {
                     IsSuccess = false,
                     Message = "Invalid username or password."
                 };
             }
 
-            
+        var sessionId = Guid.NewGuid();
 
-            var tokenResult = await GenerateToken(user);
+        var tokenResult =  GenerateToken(user, sessionId);
+
+        
+
             if (!tokenResult.IsSuccess)
             {
                 _logger.LogWarning("Token generation failed for UserId: {UserId}. Message: {Message}", user.UserId, tokenResult.Message);
-                return new Result<LoginResponseModel>
+                return new Result<LoginResultModel>
                 {
                     IsSuccess = false,
                     Message = tokenResult.Message
@@ -78,8 +81,9 @@ public class AuthService
             var session = new TblUserSession
             {
                 UserId = user.UserId,
+                SessionId =  sessionId,
                 LoginTime = DateTime.UtcNow,
-                ExpiredAt = tokenResult.Data!.ExpiresAt,
+                ExpiredAt = tokenResult.Data!.User.ExpiresAt,
                 IsExpired = false
             };
 
@@ -88,7 +92,7 @@ public class AuthService
 
             _logger.LogInformation("Login successful for UserId: {UserId}, UserName: {UserName}", user.UserId, request.UserName);
 
-            return new Result<LoginResponseModel>
+            return new Result<LoginResultModel>
             {
                 IsSuccess = true,
                 Message = "Login successful.",
@@ -136,6 +140,15 @@ public class AuthService
                 };
             }
 
+        if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+        {
+            return new Result<bool>
+            {
+                IsSuccess = false,
+                Message = "New password cannot be the same as current password."
+            };
+        }
+
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             user.MustChangePassword = false;
             user.UpdatedAt = DateTime.UtcNow;
@@ -153,17 +166,19 @@ public class AuthService
        
     }
 
-    private async Task< Result<LoginResponseModel>> GenerateToken(TblUser user)
+    private  Result<LoginResultModel> GenerateToken(TblUser user,Guid sessionId)
     {
        
             var jwtKey = _configuration["JwtSettings:Key"];
             var jwtIssuer = _configuration["JwtSettings:Issuer"];
             var jwtAudience = _configuration["JwtSettings:Audience"];
-            var jwtExpiryMinutes = int.Parse(_configuration["JwtSettings:ExpiryMinutes"] ?? "60");
+            var jwtExpiryMinutes = 60;
+                int.TryParse(_configuration["JwtSettings:ExpiryMinutes"], out jwtExpiryMinutes);
 
             if (string.IsNullOrEmpty(jwtKey))
             {
-                return new Result<LoginResponseModel>
+            _logger.LogError("JWT Key is missing.");
+            return new Result<LoginResultModel>
                 {
                     IsSuccess = false,
                     Message = "JWT key is not configured."
@@ -177,10 +192,11 @@ public class AuthService
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Role, user.Role),
+                new Claim("SessionId",sessionId.ToString()),
                 new Claim("MustChangePassword", user.MustChangePassword.ToString().ToLower())
             };
 
@@ -193,17 +209,21 @@ public class AuthService
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            return new Result<LoginResponseModel>
+            return new Result<LoginResultModel>
             {
                 IsSuccess = true,
-                Data = new LoginResponseModel
+                Data = new LoginResultModel
                 {
-                    UserId = user.UserId,
-                    UserName = user.UserName,
-                    Role = user.Role,
-                    Token = tokenString,
-                    MustChangePassword = user.MustChangePassword,
-                    ExpiresAt = expiresAt
+                    AccessToken = tokenString,
+
+                    User = new LoginResponseModel
+                    {
+                        UserId = user.UserId,
+                        UserName = user.UserName,
+                        Role = user.Role,
+                        MustChangePassword = user.MustChangePassword,
+                        ExpiresAt = expiresAt
+                    }
                 }
             };
        

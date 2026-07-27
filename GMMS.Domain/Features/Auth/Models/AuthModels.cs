@@ -11,9 +11,15 @@ public class LoginResponseModel
     public int UserId { get; set; }
     public string UserName { get; set; } = null!;
     public string Role { get; set; } = null!;
-    public string Token { get; set; } = null!;
+    
     public bool MustChangePassword { get; set; }
     public DateTime ExpiresAt { get; set; }
+}
+
+public class LoginResultModel
+{
+    public LoginResponseModel User { get; set; } = new LoginResponseModel();
+    public string AccessToken { get; set; } = string.Empty;
 }
 
 

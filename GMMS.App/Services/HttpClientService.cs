@@ -1,9 +1,11 @@
+
 namespace GMMS.App.Services
 {
     public class HttpClientService
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _baseUrl;
+        
 
         public string BaseUrl => _baseUrl;
 
