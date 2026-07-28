@@ -15,7 +15,7 @@ public class AuthService
 {
     private readonly AppDbContext _db;
     private readonly TokenService _tokenService;
-    private readonly IConfiguration _configuration;
+
     private readonly IValidator<LoginRequestModel> _loginValidator;
     private readonly IValidator<ChangePasswordRequestModel> _changePasswordValidator;
     private readonly ILogger<AuthService> _logger;
@@ -27,21 +27,21 @@ public class AuthService
         IValidator<ChangePasswordRequestModel> changePasswordValidator,
         ILogger<AuthService> logger,
         TokenService tokenService)
-        
+
     {
         _db = db;
-        _configuration = configuration;
+
         _loginValidator = loginValidator;
         _changePasswordValidator = changePasswordValidator;
         _logger = logger;
         _tokenService = tokenService;
     }
 
-    public async Task <Result<LoginResultModel>> Login(LoginRequestModel request)
+    public async Task<Result<LoginResultModel>> Login(LoginRequestModel request)
     {
         _logger.LogInformation("Login attempt for UserName: {UserName}", request.UserName);
 
-        var validationResult =  await _loginValidator.ValidateAsync(request);
+        var validationResult = await _loginValidator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
             _logger.LogWarning("Invalid login request for UserName: {UserName}. Errors: {Errors}", request.UserName, string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage)));
@@ -52,43 +52,44 @@ public class AuthService
             };
         }
 
-        
-            var user = await _db.TblUsers
-                .FirstOrDefaultAsync(x => !x.IsDeleted && x.UserName == request.UserName && x.IsActive);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        var user = await _db.TblUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => !x.IsDeleted && x.UserName == request.UserName && x.IsActive);
+
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            _logger.LogWarning("Login failed for UserName: {UserName} - invalid credentials.", request.UserName);
+            return new Result<LoginResultModel>
             {
-                _logger.LogWarning("Login failed for UserName: {UserName} - invalid credentials.", request.UserName);
-                return new Result<LoginResultModel>
-                {
-                    IsSuccess = false,
-                    Message = "Invalid username or password."
-                };
-            }
+                IsSuccess = false,
+                Message = "Invalid username or password."
+            };
+        }
 
         var sessionId = Guid.NewGuid();
 
         var tokens = _tokenService.CreateTokens(user, sessionId);
 
         var session = new TblUserSession
-            {
-                UserId = user.UserId,
-                SessionId =  sessionId,
-                LoginTime = DateTime.UtcNow,
-                
-                RefreshTokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken.Token),
-                RefreshTokenExpiresAt = tokens.RefreshToken.ExpiresAt,
-                AccessTokenExpiresAt = tokens.AccessToken.ExpiresAt,
-                
+        {
+            UserId = user.UserId,
+            SessionId = sessionId,
+            LoginTime = DateTime.UtcNow,
+
+            RefreshTokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken.Token),
+            RefreshTokenExpiresAt = tokens.RefreshToken.ExpiresAt,
+            AccessTokenExpiresAt = tokens.AccessToken.ExpiresAt,
 
 
-                IsExpired = false
-            };
 
-            await _db.TblUserSessions.AddAsync(session);
-            await _db.SaveChangesAsync();
+            IsExpired = false
+        };
 
-            _logger.LogInformation("Login successful for UserId: {UserId}, UserName: {UserName}", user.UserId, request.UserName);
+        await _db.TblUserSessions.AddAsync(session);
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Login successful for UserId: {UserId}, UserName: {UserName}", user.UserId, request.UserName);
 
 
         var loginResult = new LoginResultModel
@@ -138,7 +139,7 @@ public class AuthService
         }
 
         //Verify Refersh Token
-        var isValid = _tokenService.VerifyRefreshToken(refreshtoken,session.RefreshTokenHash);
+        var isValid = _tokenService.VerifyRefreshToken(refreshtoken, session.RefreshTokenHash);
 
         if (!isValid)
         {
@@ -273,8 +274,40 @@ public class AuthService
             Data = true
         };
     }
-        
-       
-    }
+    public async Task<Result<bool>> Logout(Guid sessionId)
+    {
+        _logger.LogInformation("Logout attempt. SessionId={SessionId}", sessionId);
 
-    
+        var session = await _db.TblUserSessions
+            .FirstOrDefaultAsync(x => x.SessionId == sessionId && !x.IsExpired);
+
+        if (session == null)
+        {
+            return new Result<bool>
+            {
+                IsSuccess = false,
+                Message = "Active session not found."
+            };
+        }
+
+
+        session.IsExpired = true;
+        session.RevokedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+
+        _logger.LogInformation("Logout successful. SessionId={SessionId}",sessionId);
+
+
+        return new Result<bool>
+        {
+            IsSuccess = true,
+            Message = "Logout successful.",
+            Data = true
+        };
+    }
+}
+
+
+

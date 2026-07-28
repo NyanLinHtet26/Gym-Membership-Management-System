@@ -29,6 +29,7 @@ namespace GMMS.Domain.Features.Auth
             var accessToken = GenerateAccessToken(user,sessionId);
             var refreshToken = GenerateRefreshToken();
 
+            var refreshDays =_configuration.GetValue<int>("JwtSettings:RefreshTokenDays");
             return new TokenResultModel
             {
                 AccessToken = accessToken,
@@ -36,7 +37,7 @@ namespace GMMS.Domain.Features.Auth
                 RefreshToken = new RefreshTokenModel
                 {
                     Token = refreshToken,
-                    ExpiresAt = DateTime.UtcNow.AddDays(7)
+                    ExpiresAt = DateTime.UtcNow.AddDays(refreshDays)
                 }
             };
         }
@@ -67,7 +68,9 @@ namespace GMMS.Domain.Features.Auth
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim("SessionId",sessionId.ToString()),
-                new Claim("MustChangePassword", user.MustChangePassword.ToString().ToLower())
+                new Claim("MustChangePassword", user.MustChangePassword.ToString().ToLower()),
+                new Claim(JwtRegisteredClaimNames.Iat,DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
+
             };
 
             var token = new JwtSecurityToken(

@@ -1,4 +1,5 @@
 using GMMS.Domain.Features.Auth;
+using GMMS.Api.Extensions;
 using GMMS.Domain.Features.Auth.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +57,7 @@ namespace GMMS.Api.Controllers
             _logger.LogInformation("Refresh token API called.");
 
 
-            var refreshToken = Request.Cookies["refreshToken"];
+            var refreshToken = Request.Cookies["refresh_Token"];
 
 
             if (string.IsNullOrEmpty(refreshToken))
@@ -116,6 +117,44 @@ namespace GMMS.Api.Controllers
             {
                 _logger.LogWarning("ChangePassword API failed. UserId={UserId}, Message={Message}", userId, result.Message);
             }
+            return Execute(result);
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var sessionIdClaim = User.FindFirst("SessionId")?.Value;
+
+            if (string.IsNullOrEmpty(sessionIdClaim))
+            {
+                return Unauthorized(new
+                {
+                    isSuccess = false,
+                    message = "Session information missing."
+                });
+            }
+
+
+            if (!Guid.TryParse(sessionIdClaim, out var sessionId))
+            {
+                return Unauthorized(new
+                {
+                    isSuccess = false,
+                    message = "Invalid session."
+                });
+            }
+
+
+            var result = await _authService.Logout(sessionId);
+
+
+            if (result.IsSuccess)
+            {
+                _cookieService.ClearAuthCoookies(Response);
+            }
+
+
             return Execute(result);
         }
     }

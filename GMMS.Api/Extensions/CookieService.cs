@@ -1,5 +1,4 @@
-﻿
-using GMMS.Domain.Features.Auth.Models;
+﻿using GMMS.Domain.Features.Auth.Models;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GMMS.Domain.Features.Auth
+namespace GMMS.Api.Extensions
 {
     public class CookieService
     {

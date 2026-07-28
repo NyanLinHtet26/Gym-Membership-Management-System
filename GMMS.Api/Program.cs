@@ -1,4 +1,5 @@
 using FluentValidation;
+using GMMS.Api.Extensions;
 using GMMS.Api.Health;
 using GMMS.Api.Middleware;
 using GMMS.Database.AppDbContextModels;
