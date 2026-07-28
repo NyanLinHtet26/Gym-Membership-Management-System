@@ -104,7 +104,7 @@ try
      {
          OnMessageReceived = context =>
          {
-             var token = context.Request.Cookies["AcessToken"];
+             var token = context.Request.Cookies["accessToken"];
 
              if (!string.IsNullOrEmpty(token))
              {

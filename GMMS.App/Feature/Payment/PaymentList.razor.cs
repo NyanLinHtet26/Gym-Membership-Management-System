@@ -88,7 +88,7 @@ namespace GMMS.App.Feature.Payment
 
             try
             {
-                var result = await ApiService.GetPaymentListAsync<Result<PaymentListResponseModel>>(pageNumber, pageSize);
+                var result = await ApiService.GetPaymentListAsync<Result<PaymentListResponseModel>>(pageNumber, pageSize, _searchTerm);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
                     payments = result.Data.Payments;

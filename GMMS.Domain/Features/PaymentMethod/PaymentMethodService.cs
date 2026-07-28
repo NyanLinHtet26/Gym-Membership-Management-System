@@ -35,7 +35,7 @@ namespace GMMS.Domain.Features.PaymentMethod
 
         public async Task<Result<PaymentMethodListResponseModel>> GetList(PaymentMethodListRequestModel request)
         {
-            _logger.LogInformation("Retrieving payment method list with PageNumber: {PageNumber}, PageSize: {PageSize}", request.PageNumber, request.PageSize);
+            _logger.LogInformation("Retrieving payment method list with PageNumber: {PageNumber}, PageSize: {PageSize}, SearchTerm: {SearchTerm}", request.PageNumber, request.PageSize, request.SearchTerm);
 
             var validationResult = await _listValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
@@ -52,6 +52,14 @@ namespace GMMS.Domain.Features.PaymentMethod
                 var query = _db.TblPaymentMethods
                     .AsNoTracking()
                     .Where(x => !x.IsDeleted);
+
+                if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+                {
+                    var search = request.SearchTerm.Trim().ToLower();
+                    query = query.Where(x =>
+                        x.PaymentMethodCode.ToLower().Contains(search) ||
+                        x.Name.ToLower().Contains(search));
+                }
 
                 var totalCount = await query.CountAsync();
                 var paymentMethods = await query

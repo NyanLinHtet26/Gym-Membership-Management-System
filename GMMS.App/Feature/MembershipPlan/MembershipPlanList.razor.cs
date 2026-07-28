@@ -88,7 +88,7 @@ namespace GMMS.App.Feature.MembershipPlan
 
             try
             {
-                var result = await ApiService.GetMembershipPlanListAsync<Result<MemberShipPlanListResponseModel>>(pageNumber, pageSize);
+                var result = await ApiService.GetMembershipPlanListAsync<Result<MemberShipPlanListResponseModel>>(pageNumber, pageSize, _searchTerm);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
                     plans = result.Data.MemberShipPlans;

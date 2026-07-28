@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace GMMS.Domain.Features.PaymentMethod.Models
 {
-public class PaymentMethodListRequestModel
+    public class PaymentMethodListRequestModel
     {
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
+        public string? SearchTerm { get; set; }
 
     }
     public class PaymentMethodListResponseModel

@@ -23,7 +23,7 @@ namespace GMMS.Api.Controllers
         [HttpGet]
         public async Task <IActionResult> PaymentList([FromQuery] PaymentListRequestModel request)
         {
-            _logger.LogInformation("PaymentList API called. PageNumber={PageNumber}, PageSize={PageSize}", request.PageNumber, request.PageSize);
+            _logger.LogInformation("PaymentList API called. PageNumber={PageNumber}, PageSize={PageSize}, SearchTerm={SearchTerm}", request.PageNumber, request.PageSize, request.SearchTerm);
 
             var result = await _paymentService.GetList(request);
             if (result.IsSuccess)

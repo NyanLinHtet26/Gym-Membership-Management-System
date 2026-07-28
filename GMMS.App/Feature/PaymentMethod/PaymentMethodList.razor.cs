@@ -88,7 +88,7 @@ namespace GMMS.App.Feature.PaymentMethod
 
             try
             {
-                var result = await ApiService.GetPaymentMethodListAsync<Result<PaymentMethodListResponseModel>>(pageNumber, pageSize);
+                var result = await ApiService.GetPaymentMethodListAsync<Result<PaymentMethodListResponseModel>>(pageNumber, pageSize, _searchTerm);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
                     methods = result.Data.PaymentMethods;

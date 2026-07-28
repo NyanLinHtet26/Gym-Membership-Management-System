@@ -86,9 +86,11 @@ namespace GMMS.App.Services
         #endregion
 
         #region MembershipPlan
-        public async Task<TResponse?> GetMembershipPlanListAsync<TResponse>(int pageNumber = 1, int pageSize = 10)
+        public async Task<TResponse?> GetMembershipPlanListAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null)
         {
             var endpoint = $"{ApiEndpoints.MembershipPlanList}?pageNumber={pageNumber}&pageSize={pageSize}";
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                endpoint += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
             return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
         }
 
@@ -117,9 +119,11 @@ namespace GMMS.App.Services
         #endregion
 
         #region PaymentMethod
-        public async Task<TResponse?> GetPaymentMethodListAsync<TResponse>(int pageNumber = 1, int pageSize = 10)
+        public async Task<TResponse?> GetPaymentMethodListAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null)
         {
             var endpoint = $"{ApiEndpoints.PaymentMethodList}?pageNumber={pageNumber}&pageSize={pageSize}";
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                endpoint += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
             return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
         }
 
@@ -148,9 +152,11 @@ namespace GMMS.App.Services
         #endregion
 
         #region Payment
-        public async Task<TResponse?> GetPaymentListAsync<TResponse>(int pageNumber = 1, int pageSize = 10)
+        public async Task<TResponse?> GetPaymentListAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null)
         {
             var endpoint = $"{ApiEndpoints.PaymentList}?pageNumber={pageNumber}&pageSize={pageSize}";
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                endpoint += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
             return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
         }
 

@@ -23,7 +23,7 @@ namespace GMMS.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> MemberShipPlanList([FromQuery] MemberShipPlanlistRequestModel request)
         {
-            _logger.LogInformation("MemberShipPlanList API called. Page={PageNumber}, PageSize={PageSize}", request.PageNumber, request.PageSize);
+            _logger.LogInformation("MemberShipPlanList API called. Page={PageNumber}, PageSize={PageSize}, SearchTerm={SearchTerm}", request.PageNumber, request.PageSize, request.SearchTerm);
 
             var result = await _memberShipPlanService.GetList(request);
             if (result.IsSuccess)

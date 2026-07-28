@@ -10,6 +10,7 @@ namespace GMMS.Domain.Features.Payment.Models
     {
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
+        public string? SearchTerm { get; set; }
     }
     public class PaymentListResponseModel
     {

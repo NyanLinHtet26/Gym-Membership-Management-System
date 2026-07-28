@@ -57,7 +57,7 @@ namespace GMMS.Api.Controllers
             _logger.LogInformation("Refresh token API called.");
 
 
-            var refreshToken = Request.Cookies["refresh_Token"];
+            var refreshToken = Request.Cookies["refreshToken"];
 
 
             if (string.IsNullOrEmpty(refreshToken))

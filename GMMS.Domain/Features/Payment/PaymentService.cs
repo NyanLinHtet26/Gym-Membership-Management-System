@@ -32,7 +32,7 @@ namespace GMMS.Domain.Features.Payment
 
         public async Task<Result<PaymentListResponseModel>> GetList(PaymentListRequestModel request)
         {
-            _logger.LogInformation("Retrieving payment list. PageNumber={PageNumber}, PageSize={PageSize}", request.PageNumber, request.PageSize);
+            _logger.LogInformation("Retrieving payment list. PageNumber={PageNumber}, PageSize={PageSize}, SearchTerm={SearchTerm}", request.PageNumber, request.PageSize, request.SearchTerm);
 
             var validationResult = await _listValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
@@ -49,6 +49,15 @@ namespace GMMS.Domain.Features.Payment
                 var query = _db.TblPayments
                     .AsNoTracking();
 
+                if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+                {
+                    var search = request.SearchTerm.Trim().ToLower();
+                    query = query.Where(x =>
+                        x.PaymentMethod.Name.ToLower().Contains(search) ||
+                        x.Status.ToLower().Contains(search) ||
+                        x.Membership.Member.Name.ToLower().Contains(search) ||
+                        x.Membership.MembershipPlan.PlanName.ToLower().Contains(search));
+                }
 
                 var totalCount = await  query.CountAsync();
 

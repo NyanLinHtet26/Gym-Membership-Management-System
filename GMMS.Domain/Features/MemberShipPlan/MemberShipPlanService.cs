@@ -35,7 +35,7 @@ namespace GMMS.Domain.Features.MemberShipPlan
 
         public async Task<Result<MemberShipPlanListResponseModel>> GetList(MemberShipPlanlistRequestModel request)
         {
-            _logger.LogInformation("Retrieving membership plan list with PageNumber: {PageNumber}, PageSize: {PageSize}", request.PageNumber, request.PageSize);
+            _logger.LogInformation("Retrieving membership plan list with PageNumber: {PageNumber}, PageSize: {PageSize}, SearchTerm: {SearchTerm}", request.PageNumber, request.PageSize, request.SearchTerm);
 
             var validationResult = await  _listValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
@@ -52,6 +52,15 @@ namespace GMMS.Domain.Features.MemberShipPlan
                 var query = _db.TblMembershipPlans
                     .AsNoTracking()
                     .Where(x => !x.IsDeleted);
+
+                if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+                {
+                    var search = request.SearchTerm.Trim().ToLower();
+                    query = query.Where(x =>
+                        x.PlanCode.ToLower().Contains(search) ||
+                        x.PlanName.ToLower().Contains(search) ||
+                        (x.Description != null && x.Description.ToLower().Contains(search)));
+                }
 
                 var  totalCount = await query.CountAsync();
 
