@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GMMS.Api.Controllers
 {
-    [Authorize(Policy = "MustNotRequirePasswordChange")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class MemberShipController : BaseController

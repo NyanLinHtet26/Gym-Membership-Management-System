@@ -9,7 +9,7 @@ namespace GMMS.Api.Controllers
     
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "MustNotRequirePasswordChange")]
+    
     public class MemberController : BaseController
     {
         private readonly MemberService _memberService;

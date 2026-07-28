@@ -116,14 +116,7 @@ try
      };
  });
 
- builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("MustNotRequirePasswordChange", policy =>
-        policy.RequireAuthenticatedUser()
-              .AddRequirements(new MustNotRequirePasswordChangeRequirement()));
-});
 
-builder.Services.AddSingleton<IAuthorizationHandler, MustNotRequirePasswordChangeHandler>();
 
  builder.Services.AddValidatorsFromAssemblyContaining<CreateMemberRequestValidator>();
 
@@ -193,17 +186,3 @@ finally
         Log.CloseAndFlush();
     }
 
-public class MustNotRequirePasswordChangeRequirement : IAuthorizationRequirement { }
-
-public class MustNotRequirePasswordChangeHandler : AuthorizationHandler<MustNotRequirePasswordChangeRequirement>
-{
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MustNotRequirePasswordChangeRequirement requirement)
-    {
-        var claim = context.User.FindFirst("MustChangePassword");
-        if (claim == null || claim.Value != "True")
-        {
-            context.Succeed(requirement);
-        }
-        return Task.CompletedTask;
-    }
-}

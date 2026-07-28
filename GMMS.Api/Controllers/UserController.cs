@@ -7,7 +7,7 @@ namespace GMMS.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "MustNotRequirePasswordChange", Roles = "Owner")]
+    [Authorize(Roles = "Owner")]    
     public class UserController : BaseController
     {
         private readonly UserService _userService;
