@@ -127,6 +127,7 @@ try
  builder.Services.AddScoped<AuthService>();
  builder.Services.AddScoped<UserService>();
  builder.Services.AddScoped<TokenService>();
+ builder.Services.AddScoped<CookieService>();
 
 
  var app = builder.Build();

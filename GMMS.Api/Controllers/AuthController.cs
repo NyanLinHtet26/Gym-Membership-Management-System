@@ -11,12 +11,14 @@ namespace GMMS.Api.Controllers
     public class AuthController : BaseController
     {
         private readonly AuthService _authService;
+        private readonly CookieService _cookieService;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(AuthService authService, ILogger<AuthController> logger)
+        public AuthController(AuthService authService, ILogger<AuthController> logger,CookieService cookieService)
         {
             _authService = authService;
             _logger = logger;
+            _cookieService = cookieService;
         }
 
         [HttpPost("login")]
@@ -31,27 +33,7 @@ namespace GMMS.Api.Controllers
                 _logger.LogWarning("Login APT failed. Username = {UserName} ",request.UserName);
                 return Execute(result);
             }
-            //Acess Token Cookie
-            Response.Cookies.Append("AcessToken", 
-                result.Data!.Tokens.AccessToken.Token,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = result.Data.Tokens.AccessToken.ExpiresAt
-                });
-
-            //Refresh Token Cookie
-            Response.Cookies.Append("refreshToken",
-               result.Data!.Tokens.RefreshToken.Token,
-               new CookieOptions
-               {
-                   HttpOnly = true,
-                   Secure = false,
-                   SameSite = SameSiteMode.Strict,
-                   Expires = result.Data.Tokens.RefreshToken.ExpiresAt
-               });
+            _cookieService.SetAuthCookies(Response, result.Data!.Tokens);
 
             _logger.LogInformation("AccessToken and RefreshToken cookies created");
             //=>return Execute(result);
@@ -103,32 +85,7 @@ namespace GMMS.Api.Controllers
             }
 
 
-            // Replace old Access Token cookie
-            Response.Cookies.Append(
-                "accessToken",
-                result.Data!.Tokens.AccessToken.Token,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false, // true in production
-                    SameSite = SameSiteMode.Lax,
-                    Expires = result.Data.Tokens.AccessToken.ExpiresAt
-                }
-            );
-
-
-            // Replace old Refresh Token cookie
-            Response.Cookies.Append(
-                "refreshToken",
-                result.Data.Tokens.RefreshToken.Token,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false, 
-                    SameSite = SameSiteMode.Strict,
-                    Expires = result.Data.Tokens.RefreshToken.ExpiresAt
-                }
-            );
+            _cookieService.SetAuthCookies(Response, result.Data!.Tokens);
 
 
             _logger.LogInformation("Token refreshed successfully. UserId={UserId}",result.Data.User.UserId);
