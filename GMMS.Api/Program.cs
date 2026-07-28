@@ -12,6 +12,7 @@ using GMMS.Domain.Features.Payment;
 using GMMS.Domain.Features.PaymentMethod;
 using GMMS.Domain.Features.User;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -115,7 +116,14 @@ try
      };
  });
 
- builder.Services.AddAuthorization();
+ builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MustNotRequirePasswordChange", policy =>
+        policy.RequireAuthenticatedUser()
+              .AddRequirements(new MustNotRequirePasswordChangeRequirement()));
+});
+
+builder.Services.AddSingleton<IAuthorizationHandler, MustNotRequirePasswordChangeHandler>();
 
  builder.Services.AddValidatorsFromAssemblyContaining<CreateMemberRequestValidator>();
 
@@ -180,7 +188,22 @@ try
  {
      Log.Fatal(ex, "Application terminated unexpectedly");
  }
- finally
- {
-     Log.CloseAndFlush();
- }
+finally
+    {
+        Log.CloseAndFlush();
+    }
+
+public class MustNotRequirePasswordChangeRequirement : IAuthorizationRequirement { }
+
+public class MustNotRequirePasswordChangeHandler : AuthorizationHandler<MustNotRequirePasswordChangeRequirement>
+{
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MustNotRequirePasswordChangeRequirement requirement)
+    {
+        var claim = context.User.FindFirst("MustChangePassword");
+        if (claim == null || claim.Value != "True")
+        {
+            context.Succeed(requirement);
+        }
+        return Task.CompletedTask;
+    }
+}

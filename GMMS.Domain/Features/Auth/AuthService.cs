@@ -125,9 +125,11 @@ public class AuthService
                 Message = "Referch token is missing"
             };
         }
-        //find Sesion 
+        var refreshTokenHash = _tokenService.HashRefreshToken(refreshtoken);
         var session = await _db.TblUserSessions
-            .FirstOrDefaultAsync(x => !x.IsExpired && x.RefreshTokenExpiresAt > DateTime.UtcNow);
+            .FirstOrDefaultAsync(x => x.RefreshTokenHash == refreshTokenHash
+                && !x.IsExpired
+                && x.RefreshTokenExpiresAt > DateTime.UtcNow);
 
         if (session == null)
         {
@@ -136,19 +138,7 @@ public class AuthService
                 IsSuccess = false,
                 Message = "Invalid refresh token."
             };
-        }
-
-        //Verify Refersh Token
-        var isValid = _tokenService.VerifyRefreshToken(refreshtoken, session.RefreshTokenHash);
-
-        if (!isValid)
-        {
-            return new Result<LoginResultModel>
-            {
-                IsSuccess = false,
-                Message = "Invalid refresh token"
-            };
-        }
+        } 
 
         //GetUser 
         var user = await _db.TblUsers
@@ -263,9 +253,20 @@ public class AuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.MustChangePassword = false;
         user.UpdatedAt = DateTime.UtcNow;
+
+        var activeSessions = await _db.TblUserSessions
+            .Where(x => x.UserId == userId && !x.IsExpired)
+            .ToListAsync();
+
+        foreach (var s in activeSessions)
+        {
+            s.IsExpired = true;
+            s.RevokedAt = DateTime.UtcNow;
+        }
+
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("Password changed successfully for UserId: {UserId}", userId);
+        _logger.LogInformation("Password changed successfully for UserId: {UserId}. Revoked {SessionCount} active session(s).", userId, activeSessions.Count);
 
         return new Result<bool>
         {

@@ -9,7 +9,7 @@ namespace GMMS.Api.Controllers
     
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "MustNotRequirePasswordChange")]
     public class PaymentMethodController : BaseController
     {
         private readonly PaymentMethodService _paymentMethodService;

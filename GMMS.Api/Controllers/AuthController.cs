@@ -111,7 +111,8 @@ namespace GMMS.Api.Controllers
             var result = await _authService.ChangePassword(userId, request);
             if (result.IsSuccess)
             {
-                _logger.LogInformation("ChangePassword API completed successfully. UserId={UserId}", userId);
+                _cookieService.ClearAuthCoookies(Response);
+                _logger.LogInformation("ChangePassword API completed successfully. UserId={UserId}. Sessions revoked, cookies cleared.", userId);
             }
             else
             {
