@@ -31,19 +31,30 @@ namespace GMMS.Api.Controllers
                 _logger.LogWarning("Login APT failed. Username = {UserName} ",request.UserName);
                 return Execute(result);
             }
+            //Acess Token Cookie
             Response.Cookies.Append("AcessToken", 
-                result.Data!.AccessToken,
+                result.Data!.Tokens.AccessToken.Token,
                 new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = false,
                     SameSite = SameSiteMode.Lax,
-                    Expires = result.Data.User.ExpiresAt
+                    Expires = result.Data.Tokens.AccessToken.ExpiresAt
                 });
-            _logger.LogInformation("Cookie created");
-            _logger.LogInformation("Login Api completely Sucessfully. UserName={UserName}",request.UserName);
 
-            //return Execute(result);
+            //Refresh Token Cookie
+            Response.Cookies.Append("refreshToken",
+               result.Data!.Tokens.RefreshToken.Token,
+               new CookieOptions
+               {
+                   HttpOnly = true,
+                   Secure = false,
+                   SameSite = SameSiteMode.Strict,
+                   Expires = result.Data.Tokens.RefreshToken.ExpiresAt
+               });
+
+            _logger.LogInformation("AccessToken and RefreshToken cookies created");
+            //=>return Execute(result);
 
             return Ok(new
             {
@@ -56,6 +67,81 @@ namespace GMMS.Api.Controllers
 
 
         }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            _logger.LogInformation("Refresh token API called.");
+
+
+            var refreshToken = Request.Cookies["refreshToken"];
+
+
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                _logger.LogWarning("Refresh token cookie missing.");
+
+                return Unauthorized(new
+                {
+                    isSuccess = false,
+                    message = "Refresh token is missing."
+                });
+            }
+
+
+            var result = await _authService.RefreshToken(refreshToken);
+
+
+            if (!result.IsSuccess)
+            {
+                _logger.LogWarning(
+                    "Refresh token failed. Message={Message}",
+                    result.Message
+                );
+
+                return Unauthorized(result);
+            }
+
+
+            // Replace old Access Token cookie
+            Response.Cookies.Append(
+                "accessToken",
+                result.Data!.Tokens.AccessToken.Token,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false, // true in production
+                    SameSite = SameSiteMode.Lax,
+                    Expires = result.Data.Tokens.AccessToken.ExpiresAt
+                }
+            );
+
+
+            // Replace old Refresh Token cookie
+            Response.Cookies.Append(
+                "refreshToken",
+                result.Data.Tokens.RefreshToken.Token,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false, 
+                    SameSite = SameSiteMode.Strict,
+                    Expires = result.Data.Tokens.RefreshToken.ExpiresAt
+                }
+            );
+
+
+            _logger.LogInformation("Token refreshed successfully. UserId={UserId}",result.Data.User.UserId);
+
+
+            return Ok(new
+            {
+                isSuccess = true,
+                message = "Token refreshed successfully.",
+                data = result.Data.User
+            });
+        }
+
 
         [Authorize]
         [HttpPost("change-password")]

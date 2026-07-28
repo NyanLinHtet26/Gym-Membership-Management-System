@@ -156,8 +156,11 @@ namespace GMMS.Database.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
                     UserId = table.Column<int>(type: "int", nullable: false),
+                    RefreshTokenHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LoginTime = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(getdate())"),
-                    ExpiredAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AccessTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RefreshTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsExpired = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>

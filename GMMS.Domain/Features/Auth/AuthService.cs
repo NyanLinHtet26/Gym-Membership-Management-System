@@ -14,6 +14,7 @@ namespace GMMS.Domain.Features.Auth;
 public class AuthService
 {
     private readonly AppDbContext _db;
+    private readonly TokenService _tokenService;
     private readonly IConfiguration _configuration;
     private readonly IValidator<LoginRequestModel> _loginValidator;
     private readonly IValidator<ChangePasswordRequestModel> _changePasswordValidator;
@@ -24,13 +25,16 @@ public class AuthService
         IConfiguration configuration,
         IValidator<LoginRequestModel> loginValidator,
         IValidator<ChangePasswordRequestModel> changePasswordValidator,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        TokenService tokenService)
+        
     {
         _db = db;
         _configuration = configuration;
         _loginValidator = loginValidator;
         _changePasswordValidator = changePasswordValidator;
         _logger = logger;
+        _tokenService = tokenService;
     }
 
     public async Task <Result<LoginResultModel>> Login(LoginRequestModel request)
@@ -64,26 +68,20 @@ public class AuthService
 
         var sessionId = Guid.NewGuid();
 
-        var tokenResult =  GenerateToken(user, sessionId);
+        var tokens = _tokenService.CreateTokens(user, sessionId);
 
-        
-
-            if (!tokenResult.IsSuccess)
-            {
-                _logger.LogWarning("Token generation failed for UserId: {UserId}. Message: {Message}", user.UserId, tokenResult.Message);
-                return new Result<LoginResultModel>
-                {
-                    IsSuccess = false,
-                    Message = tokenResult.Message
-                };
-            }
-
-            var session = new TblUserSession
+        var session = new TblUserSession
             {
                 UserId = user.UserId,
                 SessionId =  sessionId,
                 LoginTime = DateTime.UtcNow,
-                ExpiredAt = tokenResult.Data!.User.ExpiresAt,
+                
+                RefreshTokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken.Token),
+                RefreshTokenExpiresAt = tokens.RefreshToken.ExpiresAt,
+                AccessTokenExpiresAt = tokens.AccessToken.ExpiresAt,
+                
+
+
                 IsExpired = false
             };
 
@@ -92,15 +90,127 @@ public class AuthService
 
             _logger.LogInformation("Login successful for UserId: {UserId}, UserName: {UserName}", user.UserId, request.UserName);
 
-            return new Result<LoginResultModel>
+
+        var loginResult = new LoginResultModel
+        {
+            User = new LoginResponseModel
             {
-                IsSuccess = true,
-                Message = "Login successful.",
-                Data = tokenResult.Data
-            };
-        
+                UserId = user.UserId,
+                UserName = user.UserName,
+                Role = user.Role,
+                MustChangePassword = user.MustChangePassword
+            },
+
+            Tokens = tokens
+        };
+
+
+        return new Result<LoginResultModel>
+        {
+            IsSuccess = true,
+            Message = "Login successful.",
+            Data = loginResult
+        };
+
     }
 
+    public async Task<Result<LoginResultModel>> RefreshToken(string refreshtoken)
+    {
+        if (string.IsNullOrWhiteSpace(refreshtoken))
+        {
+            return new Result<LoginResultModel>
+            {
+                IsSuccess = false,
+                Message = "Referch token is missing"
+            };
+        }
+        //find Sesion 
+        var session = await _db.TblUserSessions
+            .FirstOrDefaultAsync(x => !x.IsExpired && x.RefreshTokenExpiresAt > DateTime.UtcNow);
+
+        if (session == null)
+        {
+            return new Result<LoginResultModel>
+            {
+                IsSuccess = false,
+                Message = "Invalid refresh token."
+            };
+        }
+
+        //Verify Refersh Token
+        var isValid = _tokenService.VerifyRefreshToken(refreshtoken,session.RefreshTokenHash);
+
+        if (!isValid)
+        {
+            return new Result<LoginResultModel>
+            {
+                IsSuccess = false,
+                Message = "Invalid refresh token"
+            };
+        }
+
+        //GetUser 
+        var user = await _db.TblUsers
+            .FirstOrDefaultAsync(x => x.UserId == session.UserId && !x.IsDeleted && x.IsActive);
+
+        if (user == null)
+        {
+            return new Result<LoginResultModel>
+            {
+                IsSuccess = false,
+                Message = "User not found"
+            };
+        }
+
+        //Revoke old Session 
+        session.IsExpired = true;
+        session.RevokedAt = DateTime.UtcNow;
+
+        //create new Tokens
+        var newSessionId = Guid.NewGuid();
+        var tokens = _tokenService.CreateTokens(user, newSessionId);
+
+        //Save new session
+        var newSession = new TblUserSession
+        {
+            UserId = user.UserId,
+            SessionId = newSessionId,
+            LoginTime = DateTime.UtcNow,
+
+            AccessTokenExpiresAt = tokens.AccessToken.ExpiresAt,
+
+            RefreshTokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken.Token),
+
+            RefreshTokenExpiresAt = tokens.RefreshToken.ExpiresAt,
+
+            IsExpired = false,
+
+        };
+
+        await _db.TblUserSessions.AddAsync(newSession);
+        await _db.SaveChangesAsync();
+
+        return new Result<LoginResultModel>
+        {
+            IsSuccess = true,
+            Message = "Token refreshed sucessfully.",
+
+            Data = new LoginResultModel
+            {
+                User = new LoginResponseModel
+                {
+                    UserId = user.UserId,
+                    UserName = user.UserName,
+                    Role = user.Role,
+                    MustChangePassword = user.MustChangePassword,
+                },
+                Tokens = tokens
+            }
+
+        };
+
+
+    }
     public async Task<Result<bool>> ChangePassword(int userId, ChangePasswordRequestModel request)
     {
         _logger.LogInformation("Change password attempt for UserId: {UserId}", userId);
@@ -116,29 +226,29 @@ public class AuthService
             };
         }
 
-        
-            var user = await _db.TblUsers
-                .FirstOrDefaultAsync(x => !x.IsDeleted && x.UserId == userId && x.IsActive);
 
-            if (user == null)
-            {
-                _logger.LogWarning("User with ID: {UserId} not found for password change.", userId);
-                return new Result<bool>
-                {
-                    IsSuccess = false,
-                    Message = "User not found."
-                };
-            }
+        var user = await _db.TblUsers
+            .FirstOrDefaultAsync(x => !x.IsDeleted && x.UserId == userId && x.IsActive);
 
-            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        if (user == null)
+        {
+            _logger.LogWarning("User with ID: {UserId} not found for password change.", userId);
+            return new Result<bool>
             {
-                _logger.LogWarning("Incorrect current password for UserId: {UserId}.", userId);
-                return new Result<bool>
-                {
-                    IsSuccess = false,
-                    Message = "Current password is incorrect."
-                };
-            }
+                IsSuccess = false,
+                Message = "User not found."
+            };
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            _logger.LogWarning("Incorrect current password for UserId: {UserId}.", userId);
+            return new Result<bool>
+            {
+                IsSuccess = false,
+                Message = "Current password is incorrect."
+            };
+        }
 
         if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
         {
@@ -149,83 +259,22 @@ public class AuthService
             };
         }
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            user.MustChangePassword = false;
-            user.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        user.MustChangePassword = false;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
 
-            _logger.LogInformation("Password changed successfully for UserId: {UserId}", userId);
+        _logger.LogInformation("Password changed successfully for UserId: {UserId}", userId);
 
-            return new Result<bool>
-            {
-                IsSuccess = true,
-                Message = "Password changed successfully.",
-                Data = true
-            };
+        return new Result<bool>
+        {
+            IsSuccess = true,
+            Message = "Password changed successfully.",
+            Data = true
+        };
+    }
         
        
     }
 
-    private  Result<LoginResultModel> GenerateToken(TblUser user,Guid sessionId)
-    {
-       
-            var jwtKey = _configuration["JwtSettings:Key"];
-            var jwtIssuer = _configuration["JwtSettings:Issuer"];
-            var jwtAudience = _configuration["JwtSettings:Audience"];
-            var jwtExpiryMinutes = 60;
-                int.TryParse(_configuration["JwtSettings:ExpiryMinutes"], out jwtExpiryMinutes);
-
-            if (string.IsNullOrEmpty(jwtKey))
-            {
-            _logger.LogError("JWT Key is missing.");
-            return new Result<LoginResultModel>
-                {
-                    IsSuccess = false,
-                    Message = "JWT key is not configured."
-                };
-            }
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var expiresAt = DateTime.UtcNow.AddMinutes(jwtExpiryMinutes);
-
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim("SessionId",sessionId.ToString()),
-                new Claim("MustChangePassword", user.MustChangePassword.ToString().ToLower())
-            };
-
-            var token = new JwtSecurityToken(
-                issuer: jwtIssuer,
-                audience: jwtAudience,
-                claims: claims,
-                expires: expiresAt,
-                signingCredentials: credentials);
-
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return new Result<LoginResultModel>
-            {
-                IsSuccess = true,
-                Data = new LoginResultModel
-                {
-                    AccessToken = tokenString,
-
-                    User = new LoginResponseModel
-                    {
-                        UserId = user.UserId,
-                        UserName = user.UserName,
-                        Role = user.Role,
-                        MustChangePassword = user.MustChangePassword,
-                        ExpiresAt = expiresAt
-                    }
-                }
-            };
-       
-    }
-}
+    

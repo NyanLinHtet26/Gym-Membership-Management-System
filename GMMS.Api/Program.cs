@@ -126,6 +126,8 @@ try
  builder.Services.AddScoped<PaymentService>();
  builder.Services.AddScoped<AuthService>();
  builder.Services.AddScoped<UserService>();
+ builder.Services.AddScoped<TokenService>();
+
 
  var app = builder.Build();
   

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GMMS.Database.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260727094401_InitialCreate")]
+    [Migration("20260728042634_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -437,7 +437,7 @@ namespace GMMS.Database.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserSessionId"));
 
-                    b.Property<DateTime>("ExpiredAt")
+                    b.Property<DateTime>("AccessTokenExpiresAt")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsExpired")
@@ -447,6 +447,16 @@ namespace GMMS.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("(getdate())");
+
+                    b.Property<DateTime>("RefreshTokenExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RefreshTokenHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("SessionId")
                         .ValueGeneratedOnAdd()

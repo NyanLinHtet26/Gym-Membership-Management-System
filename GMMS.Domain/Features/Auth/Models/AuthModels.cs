@@ -9,17 +9,19 @@ public class LoginRequestModel
 public class LoginResponseModel
 {
     public int UserId { get; set; }
+
     public string UserName { get; set; } = null!;
+
     public string Role { get; set; } = null!;
-    
+
     public bool MustChangePassword { get; set; }
-    public DateTime ExpiresAt { get; set; }
 }
 
 public class LoginResultModel
 {
-    public LoginResponseModel User { get; set; } = new LoginResponseModel();
-    public string AccessToken { get; set; } = string.Empty;
+    public LoginResponseModel User { get; set; } = new();
+
+    public TokenResultModel Tokens { get; set; } = new();
 }
 
 
@@ -33,9 +35,41 @@ public class ChangePasswordRequestModel
 public class UserSessionModel
 {
     public int UserSessionId { get; set; }
+
     public Guid SessionId { get; set; }
+
     public int UserId { get; set; }
+
     public DateTime LoginTime { get; set; }
-    public DateTime? ExpiredAt { get; set; }
+
+    public DateTime AccessTokenExpiresAt { get; set; }
+
+    public string RefreshTokenHash { get; set; } = string.Empty;
+
+    public DateTime RefreshTokenExpiresAt { get; set; }
+
+    public DateTime? RevokedAt { get; set; }
+
     public bool IsActive { get; set; }
+}
+public class AccessTokenModel
+{
+    public string Token { get; set; } = string.Empty;
+
+    public DateTime ExpiresAt { get; set; }
+}
+
+
+public class RefreshTokenModel
+{
+    public string Token { get; set; } = string.Empty;
+
+    public DateTime ExpiresAt { get; set; }
+}
+
+public class TokenResultModel
+{
+    public AccessTokenModel AccessToken { get; set; } = new();
+
+    public RefreshTokenModel RefreshToken { get; set; } = new();
 }
