@@ -1,0 +1,62 @@
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> Edit User
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
+        }
+
+        @if (isLoading)
+        {
+            <div class="d-flex justify-center pa-6">
+                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            </div>
+        }
+        else
+        {
+            <MudTextField @bind-Value="request.UserName"
+                          Label="Username"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Username is required."
+                          MaxLength="100"
+                          Class="mb-3"
+                          HelperText="3-100 characters" />
+
+            <MudSelect @bind-Value="request.Role"
+                       Label="Role"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       RequiredError="Role is required."
+                       Class="mb-3">
+                <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                <MudSelectItem Value="@("Owner")">Owner</MudSelectItem>
+            </MudSelect>
+
+            <MudCheckBox T="bool" @bind-Checked="request.IsActive"
+                         Label="Active"
+                         Class="mb-3" />
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Update"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@isSaving">
+            @if (isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Update
+        </MudButton>
+    </DialogActions>
+</MudDialog>

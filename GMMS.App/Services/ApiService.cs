@@ -193,6 +193,43 @@
         }
         #endregion
 
+        #region User
+        public async Task<TResponse?> GetUserListAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null)
+        {
+            var endpoint = $"{ApiEndpoints.UserList}?pageNumber={pageNumber}&pageSize={pageSize}";
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                endpoint += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
+            return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
+        }
+
+        public async Task<TResponse?> GetUserDetailsAsync<TResponse>(int id)
+        {
+            var endpoint = ApiEndpoints.UserDetails.Replace("{id}", id.ToString());
+            return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
+        }
+
+        public async Task<TResponse?> CreateUserAsync<TRequest, TResponse>(TRequest request)
+        {
+            return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.CreateUser, request));
+        }
+
+        public async Task<TResponse?> UpdateUserAsync<TRequest, TResponse>(int id, TRequest request)
+        {
+            var endpoint = ApiEndpoints.UpdateUser.Replace("{id}", id.ToString());
+            return await ExecuteAsync<TResponse>(() => _http.PutAsync<TRequest, TResponse>(endpoint, request));
+        }
+
+        public async Task<TResponse?> ResetUserPasswordAsync<TRequest, TResponse>(TRequest request)
+        {
+            return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.ResetUserPassword, request));
+        }
+
+        public async Task<TResponse?> DeleteUserAsync<TResponse>(int id)
+        {
+            var endpoint = ApiEndpoints.DeleteUser.Replace("{id}", id.ToString());
+            return await ExecuteAsync<TResponse>(() => _http.DeleteAsync<TResponse>(endpoint));
+        }
+        #endregion
 
         private async Task<TResponse?> ExecuteAsync<TResponse>(Func<Task<TResponse?>> action)
         {

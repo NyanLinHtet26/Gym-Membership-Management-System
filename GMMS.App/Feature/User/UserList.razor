@@ -1,0 +1,75 @@
+@page "/user-list"
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudPaper Class="pa-6" Elevation="2">
+        <MudText Typo="Typo.h4" Class="mb-4">User List</MudText>
+
+        <div class="d-flex flex-wrap justify-space-between align-start mb-4" style="gap: 16px;">
+            <MudTextField @bind-Value="searchTerm" Placeholder="Search by username or role..." Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" Immediate="true" Style="width: 100%; max-width: 380px;" />
+
+            <div class="d-flex flex-wrap align-center" style="gap: 12px;">
+                <MudText Typo="Typo.body2" Class="d-flex align-center">
+                    Total: <strong class="ml-2 mud-primary-text">@totalCount</strong>
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small">
+                    Create User
+                </MudButton>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="d-flex justify-center pa-12">
+                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            </div>
+        }
+        else if (errorMessage is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@errorMessage</MudAlert>
+        }
+        else if (users is not null && users.Count > 0)
+        {
+            <MudTable Items="users" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm" Elevation="1" Class="rounded">
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>Username</MudTh>
+                    <MudTh>Role</MudTh>
+                    <MudTh>Active</MudTh>
+                    <MudTh>Must Change Password</MudTh>
+                    <MudTh>Created At</MudTh>
+                    <MudTh Style="text-align: center;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="#">@context.UserId</MudTd>
+                    <MudTd DataLabel="Username">@context.UserName</MudTd>
+                    <MudTd DataLabel="Role">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Role == "Owner" ? Color.Warning : Color.Primary)">@context.Role</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Active">
+                        <MudIcon Icon="@(context.IsActive ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" />
+                    </MudTd>
+                    <MudTd DataLabel="Must Change Password">
+                        @if (context.MustChangePassword)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small" />
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Created At">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align: center;">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context.UserId))" Size="Size.Small" />
+                        <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning" OnClick="@(() => OpenResetPasswordDialog(context.UserId, context.UserName))" Size="Size.Small" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context.UserId))" Size="Size.Small" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <div class="d-flex flex-column align-center mt-6">
+                <MudPagination BoundaryCount="1" MiddleCount="1" Count="@totalPages" Selected="@_pageSelected" SelectedChanged="PageChanged" />
+            </div>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4">No users found.</MudAlert>
+        }
+    </MudPaper>
+</MudContainer>

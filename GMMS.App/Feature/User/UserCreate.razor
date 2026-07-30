@@ -1,0 +1,52 @@
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-3" /> Create User
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
+        }
+
+        <MudTextField @bind-Value="request.UserName"
+                      Label="Username"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      RequiredError="Username is required."
+                      MaxLength="100"
+                      Class="mb-3"
+                      HelperText="3-100 characters" />
+
+        <MudTextField @bind-Value="password"
+                      Label="Password"
+                      Variant="Variant.Outlined"
+                      InputType="InputType.Password"
+                      Required="true"
+                      RequiredError="Password is required."
+                      Class="mb-3"
+                      HelperText="Min 6 chars, must contain upper, lower, digit, and special char" />
+
+        <MudCheckBox T="bool" @bind-Checked="request.IsActive"
+                     Label="Active"
+                     Class="mb-3" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@isLoading">
+            @if (isLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>

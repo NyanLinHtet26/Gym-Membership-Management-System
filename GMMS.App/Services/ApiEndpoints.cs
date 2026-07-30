@@ -44,5 +44,13 @@
         public const string ChangePassword = "api/Auth/change-password";
 
         #endregion
+        #region User Endpoints
+        public const string UserList = "api/User";
+        public const string UserDetails = "api/User/{id}";
+        public const string CreateUser = "api/User";
+        public const string UpdateUser = "api/User/{id}";
+        public const string ResetUserPassword = "api/User/reset-password";
+        public const string DeleteUser = "api/User/{id}";
+        #endregion
     }
 }
