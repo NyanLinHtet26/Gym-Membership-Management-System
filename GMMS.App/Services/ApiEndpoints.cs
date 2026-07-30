@@ -39,6 +39,8 @@
         #region Auth
 
         public const string Login = "api/Auth/login";
+        public const string Refresh = "api/Auth/refresh";
+        public const string Logout = "api/Auth/logout";
         public const string ChangePassword = "api/Auth/change-password";
 
         #endregion

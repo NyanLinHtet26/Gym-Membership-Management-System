@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 
 namespace GMMS.App.Services
 {
@@ -5,16 +6,18 @@ namespace GMMS.App.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _baseUrl;
-        
+        private readonly AuthTokenStore _authTokenStore;
 
         public string BaseUrl => _baseUrl;
 
         public HttpClientService(
             IHttpClientFactory httpClientFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            AuthTokenStore authTokenStore)
         {
             _httpClientFactory = httpClientFactory;
             _baseUrl = configuration["BackendApiUrl"]!;
+            _authTokenStore = authTokenStore;
         }
 
         public async Task<TResponse?> GetAsync<TResponse>(string endpoint)
@@ -53,6 +56,12 @@ namespace GMMS.App.Services
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.BaseAddress = new Uri(_baseUrl);
             httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            if (!string.IsNullOrEmpty(_authTokenStore.AccessToken))
+            {
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", _authTokenStore.AccessToken);
+            }
 
             HttpResponseMessage response;
             switch (method)

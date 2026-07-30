@@ -1,6 +1,4 @@
-﻿using Azure;
-
-namespace GMMS.App.Services
+﻿namespace GMMS.App.Services
 {
     public class ApiService
     {
@@ -174,14 +172,24 @@ namespace GMMS.App.Services
 
         #region Auth
 
-        public async Task<TResponse?> LoginAsync<TRequest, TResponse> (TRequest request)
+        public async Task<TResponse?> LoginAsync<TRequest, TResponse>(TRequest request)
         {
             return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.Login, request));
         }
 
+        public async Task<TResponse?> RefreshAsync<TRequest, TResponse>(TRequest request)
+        {
+            return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.Refresh, request));
+        }
+
+        public async Task<TResponse?> LogoutAsync<TResponse>()
+        {
+            return await ExecuteAsync<TResponse>(() => _http.PostAsync<object, TResponse>(ApiEndpoints.Logout, null!));
+        }
+
         public async Task<TResponse?> ChangePasswordAsync<TRequest, TResponse>(TRequest request)
         {
-            return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.ChangePassword,request));
+            return await ExecuteAsync<TResponse>(() => _http.PostAsync<TRequest, TResponse>(ApiEndpoints.ChangePassword, request));
         }
         #endregion
 
@@ -201,14 +209,11 @@ namespace GMMS.App.Services
         private TResponse? HandleError<TResponse>(Exception ex)
         {
             var message = ExtractErrorMessage(ex.Message);
-            // Return a default Result<T> with error if TResponse is Result<T>
-            // For simplicity, we'll re-throw with clean message
             throw new Exception(message);
         }
 
         private string ExtractErrorMessage(string rawMessage)
         {
-            // rawMessage format: "API error (BadRequest): {\"isSuccess\":false,\"message\":\"Member code can only contain...\"}"
             var prefix = "API error (";
             var startIdx = rawMessage.IndexOf(prefix);
             if (startIdx < 0) return rawMessage;

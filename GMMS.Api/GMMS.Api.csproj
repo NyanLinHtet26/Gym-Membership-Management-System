@@ -27,4 +27,8 @@
     <ProjectReference Include="..\GMMS.Domain\GMMS.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Extensions\" />
+  </ItemGroup>
+
 </Project>

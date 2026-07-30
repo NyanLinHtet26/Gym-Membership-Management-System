@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@inject AuthTokenStore AuthTokenStore
+@inject NavigationManager Navigation
+@inject ApiService ApiService
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -6,14 +9,26 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())" />
+        <MudText Typo="Typo.subtitle1" Class="ml-2">
+            Gym Management System
+        </MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+        @if (AuthTokenStore.IsLoggedIn)
+        {
+            <MudText Typo="Typo.body2" Class="mr-4 mud-primary-text">
+                @AuthTokenStore.CurrentUser?.UserName (@AuthTokenStore.CurrentUser?.Role)
+            </MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="HandleLogout" />
+        }
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
         <MudDrawerHeader>
             <MudText Typo="Typo.h5" Class="mt-1">GMMS</MudText>
         </MudDrawerHeader>
-        <NavMenu />
+        @if (AuthTokenStore.IsLoggedIn)
+        {
+            <NavMenu />
+        }
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="py-8">
@@ -25,8 +40,35 @@
 @code {
     bool _drawerOpen = true;
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var uri = Navigation.Uri;
+            if (!AuthTokenStore.IsLoggedIn &&
+                !uri.Contains("/login", StringComparison.OrdinalIgnoreCase) &&
+                !uri.Contains("/change-password", StringComparison.OrdinalIgnoreCase))
+            {
+                Navigation.NavigateTo("/login", forceLoad: true);
+            }
+        }
+    }
+
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    private async Task HandleLogout()
+    {
+        try
+        {
+            await ApiService.LogoutAsync<object>();
+        }
+        catch
+        {
+        }
+        AuthTokenStore.Clear();
+        Navigation.NavigateTo("/login", forceLoad: true);
     }
 }

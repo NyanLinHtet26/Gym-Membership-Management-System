@@ -102,18 +102,25 @@ try
          ClockSkew = TimeSpan.Zero
      };
      options.Events = new JwtBearerEvents
-     {
-         OnMessageReceived = context =>
-         {
-             var token = context.Request.Cookies["accessToken"];
+      {
+          OnMessageReceived = context =>
+          {
+              var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+              if (!string.IsNullOrEmpty(authHeader) &&
+                  authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+              {
+                  context.Token = authHeader["Bearer ".Length..].Trim();
+                  return Task.CompletedTask;
+              }
 
-             if (!string.IsNullOrEmpty(token))
-             {
-                 context.Token = token;
-             }
-             return Task.CompletedTask;
-         }
-     };
+              var cookie = context.Request.Cookies["accessToken"];
+              if (!string.IsNullOrEmpty(cookie))
+              {
+                  context.Token = cookie;
+              }
+              return Task.CompletedTask;
+          }
+      };
  });
 
 

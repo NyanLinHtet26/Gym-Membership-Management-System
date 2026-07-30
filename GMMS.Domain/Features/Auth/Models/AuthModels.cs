@@ -73,3 +73,8 @@ public class TokenResultModel
 
     public RefreshTokenModel RefreshToken { get; set; } = new();
 }
+
+public class RefreshTokenRequestModel
+{
+    public string RefreshToken { get; set; } = null!;
+}

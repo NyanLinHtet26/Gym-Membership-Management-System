@@ -37,32 +37,36 @@ namespace GMMS.Api.Controllers
             _cookieService.SetAuthCookies(Response, result.Data!.Tokens);
 
             _logger.LogInformation("AccessToken and RefreshToken cookies created");
-            //=>return Execute(result);
 
             return Ok(new
             {
                 isSuccess = true,
                 message = "Login successful.",
-                data = result.Data.User
+                data = new
+                {
+                    user = new
+                    {
+                        result.Data.User.UserId,
+                        result.Data.User.UserName,
+                        result.Data.User.Role,
+                        result.Data.User.MustChangePassword
+                    },
+                    accessToken = result.Data.Tokens.AccessToken.Token
+                }
             });
-
-
-
 
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> Refresh()
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestModel? request = null)
         {
             _logger.LogInformation("Refresh token API called.");
 
-
-            var refreshToken = Request.Cookies["refreshToken"];
-
+            var refreshToken = request?.RefreshToken ?? Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(refreshToken))
             {
-                _logger.LogWarning("Refresh token cookie missing.");
+                _logger.LogWarning("Refresh token missing.");
 
                 return Unauthorized(new
                 {
@@ -71,9 +75,7 @@ namespace GMMS.Api.Controllers
                 });
             }
 
-
             var result = await _authService.RefreshToken(refreshToken);
-
 
             if (!result.IsSuccess)
             {
@@ -85,18 +87,25 @@ namespace GMMS.Api.Controllers
                 return Unauthorized(result);
             }
 
-
             _cookieService.SetAuthCookies(Response, result.Data!.Tokens);
 
-
             _logger.LogInformation("Token refreshed successfully. UserId={UserId}",result.Data.User.UserId);
-
 
             return Ok(new
             {
                 isSuccess = true,
                 message = "Token refreshed successfully.",
-                data = result.Data.User
+                data = new
+                {
+                    user = new
+                    {
+                        result.Data.User.UserId,
+                        result.Data.User.UserName,
+                        result.Data.User.Role,
+                        result.Data.User.MustChangePassword
+                    },
+                    accessToken = result.Data.Tokens.AccessToken.Token
+                }
             });
         }
 
