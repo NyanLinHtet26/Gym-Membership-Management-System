@@ -157,7 +157,7 @@ namespace GMMS.Domain.Features.MemberShipPlan
             
         }
 
-        public async Task<Result<MembershipPlanDetailModel>> Create(CreateMemberShipPlanRequestModel request)
+        public async Task<Result<MembershipPlanDetailModel>> Create(int createdByUserId, CreateMemberShipPlanRequestModel request)
         {
             _logger.LogInformation("Creating membership plan with PlanCode: {PlanCode}, PlanName: {PlanName}", request.PlanCode, request.PlanName);
 
@@ -201,7 +201,8 @@ namespace GMMS.Domain.Features.MemberShipPlan
 
                     IsActive = request.IsActive,
                     IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = createdByUserId
                 };
 
                 await _db.TblMembershipPlans.AddAsync(plan);
@@ -229,7 +230,7 @@ namespace GMMS.Domain.Features.MemberShipPlan
            
         }
 
-        public async Task<Result<MembershipPlanDetailModel>> Update(int id, UpdateMemberShipPlanRequestModel request)
+        public async Task<Result<MembershipPlanDetailModel>> Update(int id, int updatedByUserId, UpdateMemberShipPlanRequestModel request)
         {
             _logger.LogInformation("Updating membership plan with ID: {MembershipPlanId}, PlanCode: {PlanCode}, PlanName: {PlanName}", id, request.PlanCode, request.PlanName);
 
@@ -281,6 +282,7 @@ namespace GMMS.Domain.Features.MemberShipPlan
                 plan.DurationDays = request.DurationDays;
                 plan.IsActive = request.IsActive;
                 plan.UpdatedAt = DateTime.UtcNow;
+                plan.UpdatedBy = updatedByUserId;
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Membership plan with ID: {MembershipPlanId} updated successfully.", id);
@@ -309,7 +311,7 @@ namespace GMMS.Domain.Features.MemberShipPlan
             
         }
 
-        public async Task<Result<bool>> Delete(int membershipPlanId)
+        public async Task<Result<bool>> Delete(int membershipPlanId, int updatedByUserId)
         {
             _logger.LogInformation("Deleting membership plan with ID: {MembershipPlanId}", membershipPlanId);
 
@@ -326,6 +328,7 @@ namespace GMMS.Domain.Features.MemberShipPlan
                 }
                 plan.IsDeleted = true;
                 plan.UpdatedAt = DateTime.UtcNow;
+                plan.UpdatedBy = updatedByUserId;
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Membership plan with ID: {MembershipPlanId} deleted successfully.", membershipPlanId);

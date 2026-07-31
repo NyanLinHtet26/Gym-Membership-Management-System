@@ -1,0 +1,79 @@
+@using MudBlazor
+
+<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Payment" Class="mr-3" Color="Color.Primary" /> Create Payment
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
+        }
+
+        @if (isLoadingData)
+        {
+            <div class="d-flex justify-center pa-6">
+                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            </div>
+        }
+        else
+        {
+            <div class="mb-4">
+                <MudText Typo="Typo.body2" Class="mb-1"><strong>Membership</strong> <span class="text-danger">*</span></MudText>
+                <select class="form-select" @bind-value="_membershipStr" @bind-value:event="onchange">
+                    <option value="">-- Select Membership --</option>
+                    @if (memberships is not null)
+                    {
+                        @foreach (var m in memberships)
+                        {
+                            <option value="@m.MembershipId">@m.MemberName - @m.PlanName (@m.StartDate to @m.EndDate)</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <MudText Typo="Typo.body2" Class="mb-1"><strong>Payment Method</strong> <span class="text-danger">*</span></MudText>
+                <select class="form-select" @bind-value="_paymentMethodStr" @bind-value:event="onchange">
+                    <option value="">-- Select Payment Method --</option>
+                    @if (paymentMethods is not null)
+                    {
+                        @foreach (var pm in paymentMethods)
+                        {
+                            <option value="@pm.PaymentMethodId">@pm.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <MudNumericField @bind-Value="request.Amount" T="decimal" Label="Amount" Variant="Variant.Outlined"
+                             Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney"
+                             Min="0.01m" Step="0.01m" Required="true" RequiredError="Amount is required." Class="mb-4" />
+
+            <MudTextField @bind-Value="request.Sspath"
+                          Label="Receipt Path (optional)"
+                          Variant="Variant.Outlined"
+                          MaxLength="500"
+                          Class="mb-2"
+                          HelperText="Path or URL to the payment receipt (max 500 chars)" />
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Class="mr-2">Cancel</MudButton>
+        <MudButton OnClick="Save"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Disabled="@isSaving">
+            @if (isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>

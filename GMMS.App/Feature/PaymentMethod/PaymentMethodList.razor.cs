@@ -14,6 +14,9 @@ namespace GMMS.App.Feature.PaymentMethod
         [Inject]
         private IDialogService DialogService { get; set; } = null!;
 
+        [Inject]
+        private AuthTokenStore AuthTokenStore { get; set; } = null!;
+
         [SupplyParameterFromQuery(Name = "page")]
         public int Page { get; set; } = 1;
 

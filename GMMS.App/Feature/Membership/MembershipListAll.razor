@@ -18,9 +18,12 @@
                 <MudText Typo="Typo.body2" Class="d-flex align-center">
                     Total: <strong class="ml-2 mud-primary-text">@totalCount</strong>
                 </MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small">
-                    Create Membership
-                </MudButton>
+                @if (AuthTokenStore.CurrentUser?.Role != "Owner")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small">
+                        Create Membership
+                    </MudButton>
+                }
             </div>
         </div>
 
@@ -60,8 +63,12 @@
                         <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
                     </MudTd>
                     <MudTd DataLabel="Actions" Style="text-align: center;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context.MembershipId))" Size="Size.Small" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context.MembershipId))" Size="Size.Small" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="@(() => OpenDetailDialog(context.MembershipId))" Size="Size.Small" />
+                        @if (AuthTokenStore.CurrentUser?.Role != "Owner")
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context.MembershipId))" Size="Size.Small" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context.MembershipId))" Size="Size.Small" />
+                        }
                     </MudTd>
                 </RowTemplate>
             </MudTable>

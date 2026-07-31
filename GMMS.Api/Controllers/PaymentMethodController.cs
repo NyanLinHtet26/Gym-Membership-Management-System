@@ -6,10 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GMMS.Api.Controllers
 {
-    
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class PaymentMethodController : BaseController
     {
         private readonly PaymentMethodService _paymentMethodService;
@@ -20,8 +18,9 @@ namespace GMMS.Api.Controllers
             _paymentMethodService = paymentMethodService;
             _logger = logger;
         }
+        [Authorize]
         [HttpGet]
-        public async Task <IActionResult> PaymentMethodList([FromQuery] PaymentMethodListRequestModel request)
+        public async Task<IActionResult> PaymentMethodList([FromQuery] PaymentMethodListRequestModel request)
         {
             _logger.LogInformation("PaymentMethodList API called. Page={PageNumber}, PageSize={PageSize}, SearchTerm={SearchTerm}", request.PageNumber, request.PageSize, request.SearchTerm);
 
@@ -36,8 +35,9 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize]
         [HttpGet("{id}")]
-        public async Task <IActionResult> GetPaymentMethod([FromRoute] int id)
+        public async Task<IActionResult> GetPaymentMethod([FromRoute] int id)
         {
             _logger.LogInformation("GetPaymentMethod API called. PaymentMethodId={PaymentMethodId}", id);
 
@@ -52,12 +52,13 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize(Roles = "Owner")]
         [HttpPost]
-        public async Task <IActionResult> CreatePaymentMethod([FromBody] PaymentMethodCreateRequestModel request)
+        public async Task<IActionResult> CreatePaymentMethod([FromBody] PaymentMethodCreateRequestModel request)
         {
             _logger.LogInformation("CreatePaymentMethod API called. PaymentMethodCode={PaymentMethodCode}, Name={Name}", request.PaymentMethodCode, request.Name);
 
-            var result = await _paymentMethodService.Create(request);
+            var result = await _paymentMethodService.Create(GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("CreatePaymentMethod API completed successfully. PaymentMethodCode={PaymentMethodCode}", request.PaymentMethodCode);
@@ -68,8 +69,9 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize(Roles = "Owner")]
         [HttpPut("{id}")]
-        public async Task <IActionResult> UpdatePaymentMethod([FromRoute] int id, [FromBody] PaymentMethodUpdateRequestModel request)
+        public async Task<IActionResult> UpdatePaymentMethod([FromRoute] int id, [FromBody] PaymentMethodUpdateRequestModel request)
         {
             _logger.LogInformation("UpdatePaymentMethod API called. PaymentMethodId={PaymentMethodId}, Code={PaymentMethodCode}", id, request.PaymentMethodCode);
 
@@ -78,7 +80,7 @@ namespace GMMS.Api.Controllers
                 _logger.LogWarning("Route ID does not match request body ID. RouteId={RouteId}, BodyId={BodyId}", id, request.PaymentMethodId);
                 return BadRequest("Payment Method ID in the route does not match the ID in the request body.");
             }
-            var result = await _paymentMethodService.Update(id, request);
+            var result = await _paymentMethodService.Update(id, GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("UpdatePaymentMethod API completed successfully. PaymentMethodId={PaymentMethodId}", id);
@@ -89,12 +91,13 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize(Roles = "Owner")]
         [HttpDelete("{id}")]
-        public async Task <IActionResult> DeletePaymentMethod([FromRoute] int id)
+        public async Task<IActionResult> DeletePaymentMethod([FromRoute] int id)
         {
             _logger.LogInformation("DeletePaymentMethod API called. PaymentMethodId={PaymentMethodId}", id);
 
-            var result = await _paymentMethodService.Delete(id);
+            var result = await _paymentMethodService.Delete(id, GetCurrentUserId());
             if (result.IsSuccess)
             {
                 _logger.LogInformation("DeletePaymentMethod API completed successfully. PaymentMethodId={PaymentMethodId}", id);
@@ -104,7 +107,6 @@ namespace GMMS.Api.Controllers
                 _logger.LogWarning("DeletePaymentMethod API failed. PaymentMethodId={PaymentMethodId}, Message={Message}", id, result.Message);
             }
             return Execute(result);
-        } 
-
+        }
     }
 }

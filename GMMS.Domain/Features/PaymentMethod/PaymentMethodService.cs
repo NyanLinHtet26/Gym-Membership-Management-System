@@ -139,7 +139,7 @@ namespace GMMS.Domain.Features.PaymentMethod
             
         }
 
-        public async Task <Result<PaymentMethodModel>> Create(PaymentMethodCreateRequestModel request)
+        public async Task <Result<PaymentMethodModel>> Create(int createdByUserId, PaymentMethodCreateRequestModel request)
         {
             _logger.LogInformation("Creating payment method with PaymentMethodCode: {PaymentMethodCode}, Name: {Name}", request.PaymentMethodCode, request.Name);
 
@@ -174,7 +174,8 @@ namespace GMMS.Domain.Features.PaymentMethod
                     Name = request.Name.Trim(),
                     IsActive = request.IsActive,
                     IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = createdByUserId
                 };
                 await _db.TblPaymentMethods.AddAsync(paymentMethod);
                 await _db.SaveChangesAsync();
@@ -198,7 +199,7 @@ namespace GMMS.Domain.Features.PaymentMethod
            
         }
 
-        public async Task<Result<PaymentMethodModel>> Update(int id, PaymentMethodUpdateRequestModel request)
+        public async Task<Result<PaymentMethodModel>> Update(int id, int updatedByUserId, PaymentMethodUpdateRequestModel request)
         {
             _logger.LogInformation("Updating payment method with ID: {PaymentMethodId}, Code: {PaymentMethodCode}, Name: {Name}", id, request.PaymentMethodCode, request.Name);
 
@@ -242,6 +243,7 @@ namespace GMMS.Domain.Features.PaymentMethod
                 paymentMethod.Name = request.Name.Trim();
                 paymentMethod.IsActive = request.IsActive;
                 paymentMethod.UpdatedAt = DateTime.UtcNow;
+                paymentMethod.UpdatedBy = updatedByUserId;
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Payment method with ID: {PaymentMethodId} updated successfully.", request.PaymentMethodId);
@@ -268,7 +270,7 @@ namespace GMMS.Domain.Features.PaymentMethod
            
         }
 
-        public async Task <Result<bool>> Delete(int paymentMethodId)
+        public async Task <Result<bool>> Delete(int paymentMethodId, int updatedByUserId)
         {
             _logger.LogInformation("Deleting payment method with ID: {PaymentMethodId}", paymentMethodId);
 
@@ -287,6 +289,7 @@ namespace GMMS.Domain.Features.PaymentMethod
                 }
                 paymentMethod.IsDeleted = true;
                 paymentMethod.UpdatedAt = DateTime.UtcNow;
+                paymentMethod.UpdatedBy = updatedByUserId;
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Payment method with ID: {PaymentMethodId} deleted successfully.", paymentMethodId);

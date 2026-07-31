@@ -143,7 +143,7 @@ public class UserService
         
     }
 
-    public async Task<Result<UserModel>> Create(CreateUserRequestModel request)
+    public async Task<Result<UserModel>> Create(int createdByUserId, CreateUserRequestModel request)
     {
         _logger.LogInformation("Creating user with UserName: {UserName}, Role: {Role}", request.UserName, request.Role);
 
@@ -184,7 +184,8 @@ public class UserService
                 IsActive = request.IsActive,
                 MustChangePassword = true,
                 IsDeleted = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = createdByUserId
             };
 
             await _db.TblUsers.AddAsync(user);
@@ -211,7 +212,7 @@ public class UserService
         
     }
 
-    public async Task<Result<UserModel>> Update(int id, UpdateUserRequestModel request)
+    public async Task<Result<UserModel>> Update(int id, int updatedByUserId, UpdateUserRequestModel request)
     {
         _logger.LogInformation("Updating user with ID: {UserId}, UserName: {UserName}, Role: {Role}", id, request.UserName, request.Role);
 
@@ -259,6 +260,7 @@ public class UserService
             user.Role = request.Role;
             user.IsActive = request.IsActive;
             user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedBy = updatedByUserId;
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("User with ID: {UserId} updated successfully.", request.UserId);
@@ -285,7 +287,7 @@ public class UserService
         
     }
 
-    public async Task <Result<bool> >ResetPassword(ResetPasswordRequestModel request)
+    public async Task <Result<bool> >ResetPassword(int updatedByUserId, ResetPasswordRequestModel request)
     {
         _logger.LogInformation("Resetting password for UserId: {UserId}", request.UserId);
 
@@ -317,6 +319,7 @@ public class UserService
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             user.MustChangePassword = true;
             user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedBy = updatedByUserId;
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("Password reset successfully for UserId: {UserId}", request.UserId);
@@ -330,7 +333,7 @@ public class UserService
         
     }
 
-    public async Task <Result<bool>> Delete(int userId)
+    public async Task <Result<bool>> Delete(int userId, int updatedByUserId)
     {
         _logger.LogInformation("Deleting user with ID: {UserId}", userId);
 
@@ -349,6 +352,7 @@ public class UserService
 
             user.IsDeleted = true;
             user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedBy = updatedByUserId;
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("User with ID: {UserId} deleted successfully.", userId);

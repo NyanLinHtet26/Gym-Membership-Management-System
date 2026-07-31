@@ -6,10 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GMMS.Api.Controllers
 {
-    
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class PaymentController : BaseController
     {
         private readonly PaymentService _paymentService;
@@ -20,8 +18,9 @@ namespace GMMS.Api.Controllers
             _paymentService = paymentService;
             _logger = logger;
         }
+        [Authorize]
         [HttpGet]
-        public async Task <IActionResult> PaymentList([FromQuery] PaymentListRequestModel request)
+        public async Task<IActionResult> PaymentList([FromQuery] PaymentListRequestModel request)
         {
             _logger.LogInformation("PaymentList API called. PageNumber={PageNumber}, PageSize={PageSize}, SearchTerm={SearchTerm}", request.PageNumber, request.PageSize, request.SearchTerm);
 
@@ -36,8 +35,9 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize]
         [HttpGet("{id}")]
-        public async Task <IActionResult> GetPaymentDetail(int id)
+        public async Task<IActionResult> GetPaymentDetail(int id)
         {
             _logger.LogInformation("GetPaymentDetail API called. PaymentId={PaymentId}", id);
 
@@ -52,12 +52,13 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task <IActionResult> CreatePayment([FromBody] CreatePaymentRequestModel request)
+        public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequestModel request)
         {
             _logger.LogInformation("CreatePayment API called. MembershipId={MembershipId}, Amount={Amount}", request.MembershipId, request.Amount);
 
-            var result = await _paymentService.Create(request);
+            var result = await _paymentService.Create(GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("CreatePayment API completed successfully. MembershipId={MembershipId}", request.MembershipId);

@@ -14,6 +14,9 @@ namespace GMMS.App.Feature.Membership
         [Inject]
         private IDialogService DialogService { get; set; } = null!;
 
+        [Inject]
+        private AuthTokenStore AuthTokenStore { get; set; } = null!;
+
         [SupplyParameterFromQuery(Name = "page")]
         public int Page { get; set; } = 1;
 
@@ -143,6 +146,12 @@ namespace GMMS.App.Feature.Membership
             {
                 await LoadPage(1);
             }
+        }
+
+        private async Task OpenDetailDialog(int membershipId)
+        {
+            var parameters = new DialogParameters<MembershipDetail> { { x => x.MembershipId, membershipId } };
+            await DialogService.ShowAsync<MembershipDetail>("Membership Details", parameters);
         }
 
         private async Task OpenEditDialog(int membershipId)

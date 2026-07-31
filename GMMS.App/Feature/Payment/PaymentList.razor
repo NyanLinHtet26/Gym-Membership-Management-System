@@ -11,7 +11,12 @@
                 <MudText Typo="Typo.body2" Class="d-flex align-center">
                     Total: <strong class="ml-2 mud-primary-text">@totalCount</strong>
                 </MudText>
-              
+                @if (AuthTokenStore.CurrentUser?.Role == "Admin")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small">
+                        Create Payment
+                    </MudButton>
+                }
             </div>
         </div>
 

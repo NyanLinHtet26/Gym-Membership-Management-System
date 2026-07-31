@@ -1,6 +1,7 @@
 ﻿using GMMS.Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
 
 namespace GMMS.Api.Controllers
@@ -19,6 +20,12 @@ namespace GMMS.Api.Controllers
             }
 
             return BadRequest(result);
+        }
+
+        protected int GetCurrentUserId()
+        {
+            var value = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(value, out var id) ? id : 0;
         }
     }
 }

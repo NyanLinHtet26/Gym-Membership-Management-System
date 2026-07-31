@@ -41,7 +41,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.CreatedBy).HasDefaultValueSql("((1))");
+            entity.Property(e => e.CreatedBy);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
@@ -54,7 +54,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Status).HasMaxLength(20);
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.CreatedBy).HasDefaultValueSql("((1))");
+            entity.Property(e => e.CreatedBy);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
 
             entity.HasOne(d => d.Member).WithMany(p => p.TblMemberships)
@@ -81,7 +81,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.PlanCode).HasMaxLength(50);
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.CreatedBy).HasDefaultValueSql("((1))");
+            entity.Property(e => e.CreatedBy);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
@@ -98,7 +98,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Status).HasMaxLength(20);
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.CreatedBy).HasDefaultValueSql("((1))");
+            entity.Property(e => e.CreatedBy);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
 
             entity.HasOne(d => d.Membership).WithMany(p => p.TblPayments)
@@ -123,7 +123,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.CreatedBy).HasDefaultValueSql("((1))");
+            entity.Property(e => e.CreatedBy);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
         });
 
@@ -141,7 +141,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Role).HasMaxLength(50);
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.CreatedBy).HasDefaultValueSql("((1))");
+            entity.Property(e => e.CreatedBy);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.MustChangePassword).HasDefaultValue(true);

@@ -138,7 +138,7 @@ namespace GMMS.Domain.Features.Payment
             
         }
 
-        public async Task <Result<PaymentModel>> Create(CreatePaymentRequestModel request)
+        public async Task <Result<PaymentModel>> Create(int createdByUserId, CreatePaymentRequestModel request)
         {
             _logger.LogInformation("Creating payment for MembershipId={MembershipId}, Amount={Amount}, PaymentMethodId={PaymentMethodId}", request.MembershipId, request.Amount, request.PaymentMethodId);
 
@@ -198,7 +198,8 @@ namespace GMMS.Domain.Features.Payment
                     Amount = request.Amount,
                     Sspath = request.Sspath,
                     Status = "Pending",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = createdByUserId
                 };
 
                 await _db.TblPayments.AddAsync(newPayment);

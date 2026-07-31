@@ -44,6 +44,13 @@
             <MudTextField Value="@detail.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
                           ReadOnly="true" Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-4" />
+
+            @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+            {
+                <MudTextField Value="@(string.IsNullOrEmpty(detail.CreatedByUser) ? "—" : detail.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-4" />
+            }
         }
     </DialogContent>
 

@@ -253,6 +253,7 @@ public class AuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.MustChangePassword = false;
         user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedBy = userId;
 
         var activeSessions = await _db.TblUserSessions
             .Where(x => x.UserId == userId && !x.IsExpired)

@@ -1,0 +1,82 @@
+@using MudBlazor
+
+<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.CardMembership" Class="mr-3" Color="Color.Primary" /> Membership Details
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (isLoading)
+        {
+            <div class="d-flex justify-center pa-6">
+                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
+        else if (detail is not null)
+        {
+            <MudTextField Value="@detail.MemberName" Label="Member" Variant="Variant.Outlined"
+                          ReadOnly="true" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
+
+            <MudTextField Value="@detail.MemberCode" Label="Member Code" Variant="Variant.Outlined"
+                          ReadOnly="true" Class="mb-3" />
+
+            <MudTextField Value="@detail.PlanName" Label="Plan" Variant="Variant.Outlined"
+                          ReadOnly="true" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Subscriptions" Class="mb-3" />
+
+            <MudTextField Value="@detail.PlanCode" Label="Plan Code" Variant="Variant.Outlined"
+                          ReadOnly="true" Class="mb-3" />
+
+            <div class="d-flex flex-wrap gap-4 mb-3">
+                <MudTextField Value="@detail.StartDate.ToString("yyyy-MM-dd")" Label="Start Date" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.CalendarToday" Style="flex: 1;" />
+
+                <MudTextField Value="@detail.EndDate.ToString("yyyy-MM-dd")" Label="End Date" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.CalendarToday" Style="flex: 1;" />
+            </div>
+
+            <MudTextField Value="@detail.Status" Label="Status" Variant="Variant.Outlined"
+                          ReadOnly="true" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Flag" Class="mb-3" />
+
+            <MudDivider Class="my-3" />
+
+            <MudText Typo="Typo.subtitle2" Class="mb-2">Timestamps</MudText>
+
+            <MudTextField Value="@detail.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
+                          ReadOnly="true" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
+
+            @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+            {
+                <MudTextField Value="@(string.IsNullOrEmpty(detail.CreatedByUser) ? "—" : detail.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
+
+                @if (detail.UpdatedAt is not null || !string.IsNullOrEmpty(detail.UpdatedByUser))
+                {
+                    <MudTextField Value="@(detail.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")" Label="Updated At" Variant="Variant.Outlined"
+                                  ReadOnly="true" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
+
+                    <MudTextField Value="@(string.IsNullOrEmpty(detail.UpdatedByUser) ? "—" : detail.UpdatedByUser)" Label="Updated By" Variant="Variant.Outlined"
+                                  ReadOnly="true" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
+                }
+            }
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Filled" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>

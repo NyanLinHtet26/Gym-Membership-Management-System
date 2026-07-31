@@ -1,18 +1,18 @@
 using GMMS.App.Services;
 using GMMS.Domain;
-using GMMS.Domain.Features.Payment.Models;
+using GMMS.Domain.Features.MemberShip.Models;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace GMMS.App.Feature.Payment
+namespace GMMS.App.Feature.Membership
 {
-    public partial class PaymentDetail : ComponentBase
+    public partial class MembershipDetail : ComponentBase
     {
         [CascadingParameter]
         private IMudDialogInstance MudDialog { get; set; } = null!;
 
         [Parameter]
-        public int PaymentId { get; set; }
+        public int MembershipId { get; set; }
 
         [Inject]
         private ApiService ApiService { get; set; } = null!;
@@ -20,7 +20,7 @@ namespace GMMS.App.Feature.Payment
         [Inject]
         private AuthTokenStore AuthTokenStore { get; set; } = null!;
 
-        private PaymentDetailModel? detail;
+        private MembershipDetailModel? detail;
         private bool isLoading = true;
         private string? errorMessage;
 
@@ -28,14 +28,14 @@ namespace GMMS.App.Feature.Payment
         {
             try
             {
-                var result = await ApiService.GetPaymentDetailsAsync<Result<PaymentDetailModel>>(PaymentId);
+                var result = await ApiService.GetMembershipDetailsAsync<Result<MembershipDetailModel>>(MembershipId);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
                     detail = result.Data;
                 }
                 else
                 {
-                    errorMessage = result?.Message ?? "Payment not found.";
+                    errorMessage = result?.Message ?? "Membership not found.";
                 }
             }
             catch (Exception ex)

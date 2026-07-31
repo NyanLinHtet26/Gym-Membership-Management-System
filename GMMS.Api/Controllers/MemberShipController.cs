@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GMMS.Api.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class MemberShipController : BaseController
@@ -19,8 +18,9 @@ namespace GMMS.Api.Controllers
             _memberShipService = memberShipService;
             _logger = logger;
         }
+        [Authorize]
         [HttpGet]
-        public async Task <IActionResult> Memberlist([FromQuery] MemberShipListRequestModel request)
+        public async Task<IActionResult> Memberlist([FromQuery] MemberShipListRequestModel request)
         {
             _logger.LogInformation("MemberList API called. MemberId={MemberId}, Page={PageNumber}, PageSize={PageSize}", request.MemberId, request.PageNumber, request.PageSize);
 
@@ -30,7 +30,7 @@ namespace GMMS.Api.Controllers
                 return BadRequest("MemberId is required.");
             }
 
-            var result =  await _memberShipService.GetList(request);
+            var result = await _memberShipService.GetList(request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("MemberList API successful. Total memberships fetched: {Count}", result.Data?.MemberShips?.Count ?? 0);
@@ -41,9 +41,9 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
-
+        [Authorize]
         [HttpGet("all")]
-        public async Task <IActionResult> GetAllMemberships([FromQuery] AllMemberShipListRequestModel request)
+        public async Task<IActionResult> GetAllMemberships([FromQuery] AllMemberShipListRequestModel request)
         {
             _logger.LogInformation("GetAllMemberships API called. Page={PageNumber}, PageSize={PageSize}, SearchTerm={SearchTerm}, Status={Status}", request.PageNumber, request.PageSize, request.SearchTerm, request.Status);
 
@@ -58,7 +58,7 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
-
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMemberShipById([FromRoute] int id)
         {
@@ -75,12 +75,13 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateMemberShip([FromBody] CreateMemberShipRequestModel request)
         {
             _logger.LogInformation("CreateMemberShip API called. MemberId={MemberId}, PlanId={PlanId}, Amount={Amount}", request.MemberId, request.MembershipPlanId, request.Amount);
 
-            var result = await _memberShipService.Create(request);
+            var result = await _memberShipService.Create(GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("CreateMemberShip API completed successfully. MemberId={MemberId}", request.MemberId);
@@ -91,17 +92,18 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task <IActionResult> UpdateMemberShip([FromRoute] int id, [FromBody] UpdateMembershipRequestModel request)
+        public async Task<IActionResult> UpdateMemberShip([FromRoute] int id, [FromBody] UpdateMembershipRequestModel request)
         {
             _logger.LogInformation("UpdateMemberShip API called. MembershipId={MembershipId}, PlanId={PlanId}", id, request.MembershipPlanId);
 
-            if(id != request.MembershipId)
+            if (id != request.MembershipId)
             {
                 _logger.LogWarning("Route ID does not match request body ID. RouteId={RouteId}, BodyId={BodyId}", id, request.MembershipId);
                 return BadRequest("Membership ID in the route does not match the ID in the request body.");
             }
-            var result = await _memberShipService.Update(request);
+            var result = await _memberShipService.Update(GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("UpdateMemberShip API completed successfully. MembershipId={MembershipId}", id);
@@ -112,12 +114,13 @@ namespace GMMS.Api.Controllers
             }
             return Execute(result);
         }
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMemberShip([FromRoute] int id)
         {
             _logger.LogInformation("DeleteMemberShip API called. MembershipId={MembershipId}", id);
 
-            var result = await _memberShipService.Delete(id);
+            var result = await _memberShipService.Delete(id, GetCurrentUserId());
             if (result.IsSuccess)
             {
                 _logger.LogInformation("DeleteMemberShip API completed successfully. MembershipId={MembershipId}", id);

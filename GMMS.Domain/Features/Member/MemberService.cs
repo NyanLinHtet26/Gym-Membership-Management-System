@@ -157,7 +157,7 @@ namespace GMMS.Domain.Features.Member
                     Data = member
                 };
             }
-        public async Task <Result<MemberModel>> Create(CreateMemberRequestModel request)
+        public async Task <Result<MemberModel>> Create(int createdByUserId, CreateMemberRequestModel request)
         {
             _logger.LogInformation("Creating a new member with MemberCode: {MemberCode}, Name: {Name}", request.MemberCode, request.Name);
             var validationResult = await _createValidator.ValidateAsync(request);
@@ -192,7 +192,8 @@ namespace GMMS.Domain.Features.Member
                     MemberCode = request.MemberCode,
                     Name = request.Name,
                     IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = createdByUserId
                 };
 
 
@@ -212,11 +213,11 @@ namespace GMMS.Domain.Features.Member
                         CreatedAt = member.CreatedAt,
                         UpdatedAt = member.UpdatedAt
                     }
-                   
+                    
                 };
-           
+            
         }
-        public async Task  <Result<MemberModel>> Update(int id, UpdateMemberRequestModel request)
+        public async Task  <Result<MemberModel>>   Update(int id, int updatedByUserId, UpdateMemberRequestModel request)
         {
             _logger.LogInformation("Updating member with ID: {MemberId}, MemberCode: {MemberCode}, Name: {Name}", id, request.MemberCode, request.Name);
             var validationResult = await _updateValidator.ValidateAsync(request);
@@ -261,7 +262,8 @@ namespace GMMS.Domain.Features.Member
                 member.MemberCode = request.MemberCode;
                 member.Name = request.Name;
                 member.UpdatedAt = DateTime.UtcNow;
-             
+                member.UpdatedBy = updatedByUserId;
+              
                await _db.SaveChangesAsync();
                 _logger.LogInformation("Member with ID: {MemberId} updated successfully.", request.MemberId);
                 return new Result<MemberModel>
@@ -282,7 +284,7 @@ namespace GMMS.Domain.Features.Member
                     }
                 };
             }
-        public async Task <Result<bool>> Delete(int memberId)
+        public async Task <Result<bool>> Delete(int memberId, int updatedByUserId)
         {
             _logger.LogInformation("Deleting member with ID: {MemberId}", memberId);
            
@@ -299,6 +301,7 @@ namespace GMMS.Domain.Features.Member
                 }
                 member.IsDeleted = true;
                 member.UpdatedAt = DateTime.UtcNow;
+                member.UpdatedBy = updatedByUserId;
                 await _db.SaveChangesAsync();
                 _logger.LogInformation("Member with ID: {MemberId} deleted successfully.", memberId);
                 return new Result<bool>

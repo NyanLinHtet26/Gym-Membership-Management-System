@@ -242,7 +242,7 @@ namespace GMMS.Domain.Features.MemberShip
             
         }
 
-        public async Task <Result<MembershipDetailModel>> Create(CreateMemberShipRequestModel request)
+        public async Task <Result<MembershipDetailModel>> Create(int createdByUserId, CreateMemberShipRequestModel request)
         {
             _logger.LogInformation("Creating membership for MemberId: {MemberId}, PlanId: {PlanId}, Amount: {Amount}", request.MemberId, request.MembershipPlanId, request.Amount);
 
@@ -332,7 +332,8 @@ namespace GMMS.Domain.Features.MemberShip
                     EndDate = today.AddDays(plan.DurationDays),
                     Status = MembershipPlanStatus.Active.ToString(),
                     IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = createdByUserId
                 };
 
             await using var transaction =
@@ -351,7 +352,8 @@ namespace GMMS.Domain.Features.MemberShip
                     Amount = request.Amount,
                     Sspath = request.Sspath,
                     Status = PaymentStatus.Pending.ToString(),
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = createdByUserId
                 };
 
                 await _db.TblPayments
@@ -393,7 +395,7 @@ namespace GMMS.Domain.Features.MemberShip
           
         }
 
-        public async Task <Result<MembershipDetailModel>> Update(UpdateMembershipRequestModel request)
+        public async Task <Result<MembershipDetailModel>> Update(int updatedByUserId, UpdateMembershipRequestModel request)
         {
             _logger.LogInformation("Updating membership with ID: {MembershipId}, New PlanId: {PlanId}", request.MembershipId, request.MembershipPlanId);
 
@@ -461,6 +463,7 @@ namespace GMMS.Domain.Features.MemberShip
                 membership.MembershipPlanId = request.MembershipPlanId;
                 membership.EndDate = membership.StartDate.AddDays(plan.DurationDays);
                 membership.UpdatedAt = DateTime.UtcNow;
+                membership.UpdatedBy = updatedByUserId;
 
                await  _db.SaveChangesAsync();
 
@@ -504,7 +507,7 @@ namespace GMMS.Domain.Features.MemberShip
                     }
                 };
         }
-        public async Task<Result<bool>> Delete(int membershipId)
+        public async Task<Result<bool>> Delete(int membershipId, int updatedByUserId)
         {
             _logger.LogInformation("Deleting membership with ID: {MembershipId}", membershipId);
 
@@ -523,6 +526,7 @@ namespace GMMS.Domain.Features.MemberShip
 
                 membership.IsDeleted = true;
                 membership.UpdatedAt = DateTime.UtcNow;
+                membership.UpdatedBy = updatedByUserId;
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Membership with ID: {MembershipId} deleted successfully.", membershipId);

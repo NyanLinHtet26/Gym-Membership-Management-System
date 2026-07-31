@@ -58,7 +58,7 @@ namespace GMMS.Api.Controllers
         {
             _logger.LogInformation("CreateUser API called. UserName={UserName}, Role={Role}", request.UserName, request.Role);
 
-            var result = await _userService.Create(request);
+            var result = await _userService.Create(GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("CreateUser API completed successfully. UserName={UserName}", request.UserName);
@@ -80,7 +80,7 @@ namespace GMMS.Api.Controllers
                 _logger.LogWarning("Route ID does not match request body ID. RouteId={RouteId}, BodyId={BodyId}", id, request.UserId);
                 return BadRequest("User ID in the route does not match the ID in the request body.");
             }
-            var result = await _userService.Update(id, request);
+            var result = await _userService.Update(id, GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("UpdateUser API completed successfully. UserId={UserId}", id);
@@ -97,7 +97,7 @@ namespace GMMS.Api.Controllers
         {
             _logger.LogInformation("ResetPassword API called. UserId={UserId}", request.UserId);
 
-            var result =await _userService.ResetPassword(request);
+            var result =await _userService.ResetPassword(GetCurrentUserId(), request);
             if (result.IsSuccess)
             {
                 _logger.LogInformation("ResetPassword API completed successfully. UserId={UserId}", request.UserId);
@@ -114,7 +114,7 @@ namespace GMMS.Api.Controllers
         {
             _logger.LogInformation("DeleteUser API called. UserId={UserId}", id);
 
-            var result = await _userService.Delete(id);
+            var result = await _userService.Delete(id, GetCurrentUserId());
             if (result.IsSuccess)
             {
                 _logger.LogInformation("DeleteUser API completed successfully. UserId={UserId}", id);
