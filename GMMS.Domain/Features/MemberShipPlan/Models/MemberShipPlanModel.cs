@@ -15,7 +15,7 @@ namespace GMMS.Domain.Features.MemberShipPlan.Models
     public class MemberShipPlanListResponseModel
     {
         public int TotalCount { get; set; }
-        public List<MemberShipPlanModel> MemberShipPlans { get; set; }
+        public List<MemberShipPlanModel> MemberShipPlans { get; set; } = new();
     }
     public class MemberShipPlanModel
     {

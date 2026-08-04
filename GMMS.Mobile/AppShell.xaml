@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="GMMS.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:GMMS.Mobile.Pages"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False"
+    Title="GMMS">
+
+    <ShellContent
+        Title="Login"
+        ContentTemplate="{DataTemplate pages:LoginPage}"
+        Route="login" />
+
+    <ShellContent
+        Title="Members"
+        ContentTemplate="{DataTemplate pages:MemberListPage}"
+        Route="member-list" />
+
+    <ShellContent
+        Title="Member Details"
+        ContentTemplate="{DataTemplate pages:MemberDetailPage}"
+        Route="member-detail" />
+
+</Shell>

@@ -49,13 +49,21 @@
             return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
         }
 
-        public async Task<TResponse?> GetAllMembershipsAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null, string? status = null)
+        public async Task<TResponse?> GetAllMembershipsAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null, string? status = null, DateOnly? startDateFrom = null, DateOnly? startDateTo = null, DateOnly? endDateFrom = null, DateOnly? endDateTo = null)
         {
             var endpoint = $"{ApiEndpoints.MembershipListAll}?pageNumber={pageNumber}&pageSize={pageSize}";
             if (!string.IsNullOrWhiteSpace(searchTerm))
                 endpoint += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
             if (!string.IsNullOrWhiteSpace(status))
                 endpoint += $"&status={Uri.EscapeDataString(status)}";
+            if (startDateFrom.HasValue)
+                endpoint += $"&startDateFrom={startDateFrom.Value.ToString("yyyy-MM-dd")}";
+            if (startDateTo.HasValue)
+                endpoint += $"&startDateTo={startDateTo.Value.ToString("yyyy-MM-dd")}";
+            if (endDateFrom.HasValue)
+                endpoint += $"&endDateFrom={endDateFrom.Value.ToString("yyyy-MM-dd")}";
+            if (endDateTo.HasValue)
+                endpoint += $"&endDateTo={endDateTo.Value.ToString("yyyy-MM-dd")}";
             return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
         }
 
@@ -150,11 +158,15 @@
         #endregion
 
         #region Payment
-        public async Task<TResponse?> GetPaymentListAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null)
+        public async Task<TResponse?> GetPaymentListAsync<TResponse>(int pageNumber = 1, int pageSize = 10, string? searchTerm = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
             var endpoint = $"{ApiEndpoints.PaymentList}?pageNumber={pageNumber}&pageSize={pageSize}";
             if (!string.IsNullOrWhiteSpace(searchTerm))
                 endpoint += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
+            if (fromDate.HasValue)
+                endpoint += $"&fromDate={fromDate.Value.ToString("yyyy-MM-dd")}";
+            if (toDate.HasValue)
+                endpoint += $"&toDate={toDate.Value.ToString("yyyy-MM-dd")}";
             return await ExecuteAsync<TResponse>(() => _http.GetAsync<TResponse>(endpoint));
         }
 

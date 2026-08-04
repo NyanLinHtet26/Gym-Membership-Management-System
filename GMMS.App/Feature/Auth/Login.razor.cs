@@ -4,6 +4,7 @@ using GMMS.Domain;
 using GMMS.Domain.Features.Auth.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
 namespace GMMS.App.Feature.Auth
@@ -19,10 +20,33 @@ namespace GMMS.App.Feature.Auth
         [Inject]
         private NavigationManager Navigation { get; set; } = null!;
 
+        [Inject]
+        private ISnackbar Snackbar { get; set; } = null!;
+
         private string userName = string.Empty;
         private string password = string.Empty;
+        private bool showPassword;
+        private bool rememberMe;
         private bool isLoading;
         private string? errorMessage;
+
+        private void TogglePassword()
+        {
+            showPassword = !showPassword;
+        }
+
+        private void HandleForgotPassword()
+        {
+            Snackbar.Add("Please contact the gym owner to reset your password.", Severity.Info);
+        }
+
+        private async Task HandleEnterKey(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter")
+            {
+                await HandleLogin();
+            }
+        }
 
         private async Task HandleLogin()
         {

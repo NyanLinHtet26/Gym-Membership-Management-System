@@ -137,6 +137,26 @@ namespace GMMS.Domain.Features.MemberShip
                     query = query.Where(x => x.Status == request.Status);
                 }
 
+                if (request.StartDateFrom.HasValue)
+                {
+                    query = query.Where(x => x.StartDate >= request.StartDateFrom.Value);
+                }
+
+                if (request.StartDateTo.HasValue)
+                {
+                    query = query.Where(x => x.StartDate <= request.StartDateTo.Value);
+                }
+
+                if (request.EndDateFrom.HasValue)
+                {
+                    query = query.Where(x => x.EndDate >= request.EndDateFrom.Value);
+                }
+
+                if (request.EndDateTo.HasValue)
+                {
+                    query = query.Where(x => x.EndDate <= request.EndDateTo.Value);
+                }
+
                 var totalCount = await query.CountAsync();
 
                 var memberships = await query

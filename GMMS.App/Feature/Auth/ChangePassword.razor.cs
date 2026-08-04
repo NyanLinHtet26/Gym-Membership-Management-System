@@ -2,6 +2,7 @@ using GMMS.App.Services;
 using GMMS.Domain;
 using GMMS.Domain.Features.Auth.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace GMMS.App.Feature.Auth
 {
@@ -19,9 +20,35 @@ namespace GMMS.App.Feature.Auth
         private string currentPassword = string.Empty;
         private string newPassword = string.Empty;
         private string confirmNewPassword = string.Empty;
+        private bool showCurrent;
+        private bool showNew;
+        private bool showConfirm;
         private bool isLoading;
         private string? errorMessage;
         private string? successMessage;
+
+        private void ToggleCurrent()
+        {
+            showCurrent = !showCurrent;
+        }
+
+        private void ToggleNew()
+        {
+            showNew = !showNew;
+        }
+
+        private void ToggleConfirm()
+        {
+            showConfirm = !showConfirm;
+        }
+
+        private async Task HandleEnterKey(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter")
+            {
+                await HandleChangePassword();
+            }
+        }
 
         private async Task HandleChangePassword()
         {

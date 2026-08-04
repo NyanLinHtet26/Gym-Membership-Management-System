@@ -41,6 +41,14 @@ try
  // Add services to the container.
 
  builder.Services.AddControllers();
+
+ builder.Services.AddCors(options =>
+ {
+     options.AddPolicy("AllowAll", policy =>
+         policy.AllowAnyOrigin()
+               .AllowAnyHeader()
+               .AllowAnyMethod());
+ });
  // Health checks (basic) — extended with DB connectivity check
  builder.Services.AddHealthChecks()
      .AddCheck<DbHealthCheck>("database");
@@ -153,7 +161,12 @@ try
      app.UseSwaggerUI();
  }
 
- app.UseHttpsRedirection();
+ if (!app.Environment.IsDevelopment())
+ {
+     app.UseHttpsRedirection();
+ }
+
+ app.UseCors("AllowAll");
 
  app.UseAuthentication();
  app.UseAuthorization();

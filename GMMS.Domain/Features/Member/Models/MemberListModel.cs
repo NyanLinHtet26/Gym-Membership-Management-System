@@ -15,7 +15,7 @@ public class MemberListRequestModel
 public class MemberListResponseModel
 {
     public int TotalCount { get; set; }
-    public List<MemberModel> Members { get; set; }
+    public List<MemberModel> Members { get; set; } = new();
 }
 public class MemberModel
 {

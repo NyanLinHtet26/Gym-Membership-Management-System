@@ -59,6 +59,16 @@ namespace GMMS.Domain.Features.Payment
                         x.Membership.MembershipPlan.PlanName.ToLower().Contains(search));
                 }
 
+                if (request.FromDate.HasValue)
+                {
+                    query = query.Where(x => x.CreatedAt >= request.FromDate.Value);
+                }
+
+                if (request.ToDate.HasValue)
+                {
+                    query = query.Where(x => x.CreatedAt <= request.ToDate.Value);
+                }
+
                 var totalCount = await  query.CountAsync();
 
 

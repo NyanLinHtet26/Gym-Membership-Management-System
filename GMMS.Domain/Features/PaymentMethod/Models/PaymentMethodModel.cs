@@ -16,7 +16,7 @@ namespace GMMS.Domain.Features.PaymentMethod.Models
     public class PaymentMethodListResponseModel
     {
         public int TotalCount { get; set; }
-        public List<PaymentMethodModel> PaymentMethods { get; set; }
+        public List<PaymentMethodModel> PaymentMethods { get; set; } = new();
     }
     public class PaymentMethodModel
     {

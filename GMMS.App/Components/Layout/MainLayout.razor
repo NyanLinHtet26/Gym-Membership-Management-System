@@ -6,24 +6,22 @@
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 <MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())" />
-        <MudText Typo="Typo.subtitle1" Class="ml-2">
-            Gym Management System
-        </MudText>
+    <MudAppBar Elevation="1" Style="background-color: #111111; color: #fff;">
+        <img src="logo.svg" alt="Gym Logo" class="ml-2" style="height: 30px; width: 30px; cursor: pointer;" @onclick="(e => DrawerToggle())" />
+        
         <MudSpacer />
         @if (AuthTokenStore.IsLoggedIn)
         {
-            <MudText Typo="Typo.body2" Class="mr-4 mud-primary-text">
-                @AuthTokenStore.CurrentUser?.UserName (@AuthTokenStore.CurrentUser?.Role)
-            </MudText>
+           
+            <CalendarDropdown />
             <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="HandleLogout" />
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Style="background-color: #111111;">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h5" Class="mt-1">GMMS</MudText>
+            <MudText Typo="Typo.h5" Class="mt-1" Style="color: #fff;">GMMS</MudText>
         </MudDrawerHeader>
         @if (AuthTokenStore.IsLoggedIn)
         {

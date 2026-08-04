@@ -11,11 +11,13 @@ namespace GMMS.Domain.Features.Payment.Models
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
         public string? SearchTerm { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
     }
     public class PaymentListResponseModel
     {
         public int TotalCount { get; set; }
-        public List<PaymentModel> Payments { get; set; }
+        public List<PaymentModel> Payments { get; set; } = new();
     }
     public class PaymentModel
     {

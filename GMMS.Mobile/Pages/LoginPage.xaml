@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="GMMS.Mobile.Pages.LoginPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:GMMS.Mobile.ViewModels"
+             xmlns:converters="clr-namespace:GMMS.Mobile.Converters"
+             x:DataType="vm:LoginViewModel"
+             Title="Login"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#0D0A12">
+
+    <ContentPage.Resources>
+        <converters:NotNullToBoolConverter x:Key="NotNullToBool" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,Auto,*" Padding="24,0">
+        <VerticalStackLayout Grid.Row="1" Spacing="10">
+            <Label Text="GMMS"
+                   FontSize="44"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   HorizontalOptions="Center" />
+            <Label Text="Gym Membership System"
+                   FontSize="16"
+                   TextColor="#FF2E93"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,18" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="White"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="24,26">
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="Sign In"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="#111111" />
+
+                    <Entry Text="{Binding UserName}"
+                           Placeholder="Username"
+                           PlaceholderColor="#9E9E9E"
+                           TextColor="#111111"
+                           ReturnType="Next"
+                           Margin="0,8,0,0" />
+
+                    <Entry Text="{Binding Password}"
+                           Placeholder="Password"
+                           PlaceholderColor="#9E9E9E"
+                           TextColor="#111111"
+                           IsPassword="True"
+                           ReturnType="Go"
+                           Completed="OnPasswordCompleted" />
+
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="#D32F2F"
+                           FontSize="13"
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource NotNullToBool}}" />
+
+                    <Button Text="Sign In"
+                            Command="{Binding LoginCommand}"
+                            BackgroundColor="#FF2E93"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            HeightRequest="48"
+                            CornerRadius="10" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+
+        <ActivityIndicator Grid.Row="1"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           Color="#FF2E93"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

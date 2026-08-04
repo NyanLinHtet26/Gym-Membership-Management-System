@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="GMMS.Mobile.Pages.MemberListPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:GMMS.Mobile.ViewModels"
+             xmlns:models="clr-namespace:GMMS.Mobile.Models"
+             xmlns:converters="clr-namespace:GMMS.Mobile.Converters"
+             x:DataType="vm:MemberViewModel"
+             x:Name="ListPage"
+             Title="Members"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#0D0A12">
+
+    <ContentPage.Resources>
+        <converters:NotNullToBoolConverter x:Key="NotNullToBool" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="16,12">
+        <VerticalStackLayout Spacing="6" Padding="0,0,0,10">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Members"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       TextColor="White" />
+                <Button Grid.Column="1"
+                        Text="Logout"
+                        Command="{Binding LogoutCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="#FF2E93"
+                        FontSize="14"
+                        Padding="8,0" />
+            </Grid>
+            <Label Text="{Binding CurrentUserName}"
+                   TextColor="#FF2E93"
+                   FontSize="13" />
+        </VerticalStackLayout>
+
+        <RefreshView Grid.Row="1"
+                     Command="{Binding RefreshMembersCommand}"
+                     IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Members}"
+                            SelectionMode="None"
+                            EmptyView="No members found."
+                            BackgroundColor="Transparent">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Member">
+                        <Border Margin="0,4"
+                                Padding="16,14"
+                                BackgroundColor="#16121E"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenMemberCommand, Source={x:Reference ListPage}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Name}"
+                                           TextColor="White"
+                                           FontSize="16"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding MemberCode}"
+                                           TextColor="#FF2E93"
+                                           FontSize="12" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1"
+                                       Text="›"
+                                       FontSize="28"
+                                       TextColor="#777777"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="12"
+                             IsVisible="{Binding ErrorMessage, Converter={StaticResource NotNullToBool}}"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center">
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="#FF8A8A"
+                   FontSize="14"
+                   HorizontalTextAlignment="Center" />
+            <Button Text="Retry"
+                    Command="{Binding LoadMembersCommand}"
+                    BackgroundColor="#FF2E93"
+                    TextColor="White"
+                    HeightRequest="42"
+                    WidthRequest="120"
+                    CornerRadius="10" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

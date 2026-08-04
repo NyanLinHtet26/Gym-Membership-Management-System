@@ -19,12 +19,16 @@ namespace GMMS.Domain.Features.MemberShip.Models
         public int PageSize { get; set; }
         public string? SearchTerm { get; set; }
         public string? Status { get; set; }
+        public DateOnly? StartDateFrom { get; set; }
+        public DateOnly? StartDateTo { get; set; }
+        public DateOnly? EndDateFrom { get; set; }
+        public DateOnly? EndDateTo { get; set; }
     }
 
     public class MemberShipListResponseModel
     {
         public int TotalCount { get; set; }
-        public List<MemberShipModel> MemberShips { get; set; }
+        public List<MemberShipModel> MemberShips { get; set; } = new();
     }
     public class MemberShipModel
     {

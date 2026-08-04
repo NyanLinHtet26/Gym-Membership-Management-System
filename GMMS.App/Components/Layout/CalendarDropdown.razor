@@ -1,0 +1,153 @@
+@namespace GMMS.App.Components.Layout
+@using MudBlazor
+
+<MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+    <ActivatorContent>
+        <MudIconButton Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Inherit" Class="mr-2" OnClick="context.ToggleAsync" />
+    </ActivatorContent>
+    <ChildContent>
+        <MudPaper Elevation="0" Class="pa-4 gmm-cal-popover">
+            <div class="d-flex align-center justify-space-between mb-2">
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" OnClick="PrevMonth" />
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">@MonthTitle</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" OnClick="NextMonth" />
+            </div>
+            <div class="d-flex justify-space-between mb-2">
+                <MudSwitch T="bool" Value="_showPayments" ValueChanged="PaymentsChanged" Label="Payments" Color="Color.Success" />
+                <MudSwitch T="bool" Value="_showStarts" ValueChanged="StartsChanged" Label="Starts" Color="Color.Primary" />
+                <MudSwitch T="bool" Value="_showEnds" ValueChanged="EndsChanged" Label="Ends" Color="Color.Warning" />
+            </div>
+            <div class="d-flex mb-1">
+                @foreach (var label in _weekDayLabels)
+                {
+                    <div class="gmm-cal-cell gmm-cal-weekday">@label</div>
+                }
+            </div>
+            <div class="d-flex flex-wrap">
+                @foreach (var day in _days)
+                {
+                    @if (day.HasValue)
+                    {
+                        var date = day.Value;
+                        var dayEvents = FilteredEvents.Where(e => e.Date == date).ToList();
+                        var isSelected = date == _selectedDate;
+                        <div class="gmm-cal-cell gmm-cal-day @(isSelected ? "gmm-cal-day-selected" : "") @(date == _today ? "gmm-cal-day-today" : "")"
+                             @onclick="() => SelectDay(date)">
+                            <div class="d-flex justify-center">@date.Day</div>
+                            <div class="d-flex justify-center gmm-cal-dots">
+                                @if (dayEvents.Any(e => e.Type == "Payment"))
+                                {
+                                    <span class="gmm-cal-dot gmm-cal-dot-green"></span>
+                                }
+                                @if (dayEvents.Any(e => e.Type == "Start"))
+                                {
+                                    <span class="gmm-cal-dot gmm-cal-dot-blue"></span>
+                                }
+                                @if (dayEvents.Any(e => e.Type == "End"))
+                                {
+                                    <span class="gmm-cal-dot gmm-cal-dot-orange"></span>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="gmm-cal-cell"></div>
+                    }
+                }
+            </div>
+            <MudDivider Class="my-3" />
+            @if (_selectedDate.HasValue)
+            {
+                var selectedEvents = FilteredEvents.Where(e => e.Date == _selectedDate.Value).ToList();
+                <MudText Typo="Typo.body2" Class="mb-2 mud-primary-text">
+                    @_selectedDate.Value.ToString("dd MMM yyyy")
+                </MudText>
+                @if (selectedEvents.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">No events on this day.</MudText>
+                }
+                else
+                {
+                    @foreach (var ev in selectedEvents)
+                    {
+                        <div class="d-flex align-center justify-space-between my-1">
+                            <div class="mr-2">
+                                <MudText Typo="Typo.body2">@ev.Title</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@ev.Detail</MudText>
+                            </div>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => OpenDetail(ev)">
+                                Open
+                            </MudButton>
+                        </div>
+                    }
+                }
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Select a day to view events.</MudText>
+            }
+        </MudPaper>
+    </ChildContent>
+</MudMenu>
+
+<style>
+    .gmm-cal-popover {
+        width: 340px;
+    }
+
+    .gmm-cal-cell {
+        width: calc(100% / 7);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .gmm-cal-weekday {
+        font-size: 0.75rem;
+        color: var(--mud-palette-text-secondary);
+        padding-bottom: 4px;
+    }
+
+    .gmm-cal-day {
+        height: 44px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: background-color 0.15s ease;
+    }
+
+    .gmm-cal-day:hover {
+        background-color: var(--mud-palette-action-hover);
+    }
+
+    .gmm-cal-day-selected {
+        background-color: var(--mud-palette-primary-hover);
+        font-weight: 600;
+        color: var(--mud-palette-primary);
+    }
+
+    .gmm-cal-day-today {
+        border: 1px solid var(--mud-palette-primary);
+        border-radius: 50%;
+        font-weight: 600;
+    }
+
+    .gmm-cal-dots {
+        gap: 3px;
+        height: 8px;
+        margin-top: 2px;
+    }
+
+    .gmm-cal-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .gmm-cal-dot-green { background-color: var(--mud-palette-success); }
+    .gmm-cal-dot-blue { background-color: var(--mud-palette-primary); }
+    .gmm-cal-dot-orange { background-color: var(--mud-palette-warning); }
+</style>

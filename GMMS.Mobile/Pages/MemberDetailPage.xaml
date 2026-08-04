@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="GMMS.Mobile.Pages.MemberDetailPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:GMMS.Mobile.ViewModels"
+             xmlns:converters="clr-namespace:GMMS.Mobile.Converters"
+             x:DataType="vm:MemberViewModel"
+             Title="Member Details"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#0D0A12">
+
+    <ContentPage.Resources>
+        <converters:NotNullToBoolConverter x:Key="NotNullToBool" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <ActivityIndicator Grid.Row="1"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           Color="#FF2E93"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="12"
+                             Padding="20,8"
+                             IsVisible="{Binding Detail, Converter={StaticResource NotNullToBool}}">
+            <Label Text="{Binding Detail.Name}"
+                   FontSize="30"
+                   FontAttributes="Bold"
+                   TextColor="White" />
+            <Label Text="{Binding Detail.MemberCode}"
+                   TextColor="#FF2E93"
+                   FontSize="15" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="#16121E"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="16,12"
+                    Margin="0,14,0,0">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Member ID" TextColor="#9E9E9E" FontSize="13" />
+                        <Label Grid.Column="1" Text="{Binding Detail.MemberId}" TextColor="White" FontSize="14" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="#2A2A35" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Created At" TextColor="#9E9E9E" FontSize="13" />
+                        <Label Grid.Column="1" Text="{Binding Detail.CreatedAt, StringFormat='{0:yyyy-MM-dd HH:mm}'}" TextColor="White" FontSize="14" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="#2A2A35" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Created By" TextColor="#9E9E9E" FontSize="13" />
+                        <Label Grid.Column="1" Text="{Binding Detail.CreatedByUser}" TextColor="White" FontSize="14" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="#2A2A35" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Updated At" TextColor="#9E9E9E" FontSize="13" />
+                        <Label Grid.Column="1" Text="{Binding Detail.UpdatedAt, StringFormat='{0:yyyy-MM-dd HH:mm}'}" TextColor="White" FontSize="14" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="#2A2A35" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Updated By" TextColor="#9E9E9E" FontSize="13" />
+                        <Label Grid.Column="1" Text="{Binding Detail.UpdatedByUser}" TextColor="White" FontSize="14" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="12"
+                             IsVisible="{Binding ErrorMessage, Converter={StaticResource NotNullToBool}}"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center">
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="#FF8A8A"
+                   FontSize="14"
+                   HorizontalTextAlignment="Center" />
+            <Button Text="Retry"
+                    Command="{Binding RetryDetailCommand}"
+                    BackgroundColor="#FF2E93"
+                    TextColor="White"
+                    HeightRequest="42"
+                    WidthRequest="120"
+                    CornerRadius="10" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

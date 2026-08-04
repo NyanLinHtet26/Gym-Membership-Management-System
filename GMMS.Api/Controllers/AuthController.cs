@@ -51,7 +51,12 @@ namespace GMMS.Api.Controllers
                         result.Data.User.Role,
                         result.Data.User.MustChangePassword
                     },
-                    accessToken = result.Data.Tokens.AccessToken.Token
+                    accessToken = result.Data.Tokens.AccessToken.Token,
+                    refreshToken = new
+                    {
+                        result.Data.Tokens.RefreshToken.Token,
+                        result.Data.Tokens.RefreshToken.ExpiresAt
+                    }
                 }
             });
 
@@ -104,7 +109,12 @@ namespace GMMS.Api.Controllers
                         result.Data.User.Role,
                         result.Data.User.MustChangePassword
                     },
-                    accessToken = result.Data.Tokens.AccessToken.Token
+                    accessToken = result.Data.Tokens.AccessToken.Token,
+                    refreshToken = new
+                    {
+                        result.Data.Tokens.RefreshToken.Token,
+                        result.Data.Tokens.RefreshToken.ExpiresAt
+                    }
                 }
             });
         }
