@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Gym Membership Management System
 
 A complete gym membership management system built with .NET 8 using Clean Architecture pattern.
@@ -213,3 +214,6 @@ dotnet ef migrations add InitialCreate --project GMMS.Database --startup-project
 dotnet ef database update --project GMMS.Database --startup-project GMMS.Api
 
 
+=======
+# Gym-Membership-Management-System
+>>>>>>> 6b34cb3346f70d6406fcd622f0220cd4507edb4b
