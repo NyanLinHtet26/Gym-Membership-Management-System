@@ -16,6 +16,7 @@ builder.Services.AddScoped<AuthTokenStore>();
 builder.Services.AddScoped<HttpClientService>();
 builder.Services.AddScoped<ApiService>();
 builder.Services.AddScoped<CalendarService>();
+builder.Services.AddScoped<SessionService>();
 
 var app = builder.Build();
 

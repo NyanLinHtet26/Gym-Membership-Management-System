@@ -1,6 +1,4 @@
-﻿@inject AuthTokenStore AuthTokenStore
-@inject ApiService ApiService
-@inject NavigationManager Navigation
+﻿@namespace GMMS.App.Components.Layout
 
 <MudPaper Width="250px" Elevation="0" Class="gmm-nav-dark d-flex flex-column" Style="background-color: transparent; color: #fff; height:100%;">
     <MudNavMenu Rounded="true" Margin="Margin.Dense" Color="Color.Primary" Class="pa-2">
@@ -14,81 +12,34 @@
             <MudNavLink Href="user-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AdminPanelSettings">Users</MudNavLink>
         }
     </MudNavMenu>
-    <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" Class="mt-auto" Style="width:100%;">
-        <ActivatorContent>
-            <div class="d-flex align-center justify-space-between px-3 py-2 gmm-nav-avatar" @onclick="context.ToggleAsync">
-                <div class="d-flex align-center">
-                    <MudAvatar Size="Size.Small" Color="Color.Primary" Class="mr-3">@Initial</MudAvatar>
-                    <div>
-                        <MudText Typo="Typo.body2">@AuthTokenStore.CurrentUser?.UserName</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@AuthTokenStore.CurrentUser?.Role</MudText>
+
+    <div class="px-2 pb-3 mt-auto">
+        <MudDivider Style="background-color: rgba(255,255,255,0.12);" Class="mb-3" />
+        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" Style="width:100%;"
+                 @bind-Open="_accountMenuOpen" PopoverClass="gmm-nav-popover">
+            <ActivatorContent>
+                <div class="gmm-nav-account @(_accountMenuOpen ? "gmm-nav-account--open" : "")" @onclick="context.ToggleAsync">
+                    <MudAvatar Size="Size.Small" Style="background-color:#2A2A2A; color:#fff; border:1px solid rgba(255,255,255,0.15);">@Initial</MudAvatar>
+                    <div class="gmm-nav-account__info">
+                        <MudText Typo="Typo.body2" Class="gmm-nav-account__name">@AuthTokenStore.CurrentUser?.UserName</MudText>
+                        <MudText Typo="Typo.caption" Class="gmm-nav-role">@RoleLabel</MudText>
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small" Class="gmm-nav-account__more" aria-label="Account options" />
+                </div>
+            </ActivatorContent>
+            <ChildContent>
+                <div class="gmm-nav-popover__header">
+                    <MudAvatar Size="Size.Small" Style="background-color:#2A2A2A; color:#fff; border:1px solid rgba(255,255,255,0.15);">@Initial</MudAvatar>
+                    <div class="gmm-nav-popover__meta">
+                        <MudText Typo="Typo.body2" Class="gmm-nav-popover__name">@AuthTokenStore.CurrentUser?.UserName</MudText>
+                        <MudText Typo="Typo.caption" Class="gmm-nav-role">@RoleLabel</MudText>
                     </div>
                 </div>
-                <MudIcon Icon="@Icons.Material.Filled.ArrowDropDown" Size="Size.Small" />
-            </div>
-        </ActivatorContent>
-        <ChildContent>
-            <MudMenuItem OnClick="GoToChangePassword" Icon="@Icons.Material.Filled.LockReset">Change Password</MudMenuItem>
-            <MudMenuItem OnClick="HandleLogout" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
-        </ChildContent>
-    </MudMenu>
+                <MudDivider />
+                <MudMenuItem OnClick="GoToChangePassword" Icon="@Icons.Material.Filled.LockReset">Change Password</MudMenuItem>
+                <MudDivider />
+                <MudMenuItem OnClick="HandleLogout" Icon="@Icons.Material.Filled.Logout" Style="color:#DC2626;">Log out</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    </div>
 </MudPaper>
-
-<style>
-    .gmm-nav-avatar {
-        cursor: pointer;
-        border-radius: 8px;
-        transition: background-color 0.15s ease;
-    }
-
-    .gmm-nav-avatar:hover {
-        background-color: var(--mud-palette-action-hover);
-    }
-
-    .gmm-nav-dark .mud-nav-link {
-        color: rgba(255, 255, 255, 0.7);
-    }
-
-    .gmm-nav-dark .mud-nav-link:hover {
-        color: #fff;
-        background-color: rgba(255, 255, 255, 0.08);
-    }
-
-    .gmm-nav-dark .mud-nav-link.active,
-    .gmm-nav-dark .mud-nav-link.active:hover {
-        background-color: #DC2626;
-        color: #fff;
-    }
-
-    .gmm-nav-dark .mud-text-secondary {
-        color: rgba(255, 255, 255, 0.6);
-    }
-
-    .gmm-nav-dark .gmm-nav-avatar:hover {
-        background-color: rgba(255, 255, 255, 0.08);
-    }
-</style>
-
-@code {
-    private string Initial => AuthTokenStore.CurrentUser?.UserName is { Length: > 0 } name
-        ? name[..1].ToUpperInvariant()
-        : "?";
-
-    private void GoToChangePassword()
-    {
-        Navigation.NavigateTo("/change-password");
-    }
-
-    private async Task HandleLogout()
-    {
-        try
-        {
-            await ApiService.LogoutAsync<object>();
-        }
-        catch
-        {
-        }
-        AuthTokenStore.Clear();
-        Navigation.NavigateTo("/login", forceLoad: true);
-    }
-}

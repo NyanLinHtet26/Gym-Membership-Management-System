@@ -64,3 +64,110 @@ h1:focus {
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
+
+/* NavMenu active state - global because CSS isolation cannot reliably reach
+   MudBlazor component internals (MudNavLink renders a plain <div><a>).
+   Selector mirrors MudBlazor's own rule (which is 0,5,0 due to :not(...)),
+   so this is 0,6,0 - it wins even without !important. */
+
+.gmm-nav-dark .mud-nav-link {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.gmm-nav-dark .mud-nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.gmm-nav-dark .mud-navmenu.mud-navmenu-primary .mud-nav-link.active:not(.mud-nav-link-disabled),
+.gmm-nav-dark .mud-navmenu.mud-navmenu-primary .mud-nav-link.active:not(.mud-nav-link-disabled):hover {
+    color: #fff !important;
+    font-weight: 600 !important;
+    background-color: rgba(220, 38, 38, 0.16);
+    border-radius: 8px;
+    position: relative;
+    --mud-ripple-color: #DC2626;
+}
+
+.gmm-nav-dark .mud-navmenu.mud-navmenu-primary .mud-nav-link.active:not(.mud-nav-link-disabled) .mud-nav-link-icon {
+    color: #fff;
+}
+
+.gmm-nav-dark .mud-nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 25%;
+    bottom: 25%;
+    width: 4px;
+    border-radius: 4px;
+    background-color: #DC2626;
+}
+
+.gmm-nav-dark .mud-text-secondary {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* NavMenu account popover - global because MudPopover teleports to <body> */
+.gmm-nav-popover {
+    background-color: #1A1A1A;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    min-width: 220px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.gmm-nav-popover .mud-list {
+    padding: 6px;
+}
+
+.gmm-nav-popover .mud-menu-item {
+    color: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    min-height: 40px;
+    padding: 0 12px;
+}
+
+.gmm-nav-popover .mud-menu-item:hover,
+.gmm-nav-popover .mud-menu-item:focus-visible {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.gmm-nav-popover .mud-menu-item .mud-icon-root {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.gmm-nav-popover .mud-menu-item:hover .mud-icon-root,
+.gmm-nav-popover .mud-menu-item:focus-visible .mud-icon-root {
+    color: #fff;
+}
+
+.gmm-nav-popover .mud-divider {
+    margin: 6px 0;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.gmm-nav-popover__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px 10px;
+}
+
+.gmm-nav-popover__meta {
+    min-width: 0;
+}
+
+.gmm-nav-popover__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gmm-nav-popover .gmm-nav-role {
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    font-size: .7rem;
+    color: rgba(255, 255, 255, 0.6);
+}

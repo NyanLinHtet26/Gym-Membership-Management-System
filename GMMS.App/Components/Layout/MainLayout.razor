@@ -1,7 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @inject AuthTokenStore AuthTokenStore
 @inject NavigationManager Navigation
-@inject ApiService ApiService
+@inject SessionService Session
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -9,19 +10,25 @@
 <MudPopoverProvider />
 <MudLayout>
     <MudAppBar Elevation="1" Style="background-color: #111111; color: #fff;">
-        <img src="logo.svg" alt="Gym Logo" class="ml-2" style="height: 30px; width: 30px; cursor: pointer;" @onclick="(e => DrawerToggle())" />
-        
+        <img src="logo.svg" alt="Gym Logo" class="ml-2 gmm-appbar__logo" @onclick="(e => DrawerToggle())" />
+        <MudText Typo="Typo.h6" Class="gmm-appbar__title">GMMS</MudText>
+        @if (AuthTokenStore.IsLoggedIn)
+        {
+            <MudText Typo="Typo.caption" Class="gmm-appbar__divider">/</MudText>
+            <MudText Typo="Typo.caption" Class="gmm-appbar__page">@PageTitle</MudText>
+        }
         <MudSpacer />
         @if (AuthTokenStore.IsLoggedIn)
         {
-           
             <CalendarDropdown />
-            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="HandleLogout" />
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Title="Log out" OnClick="HandleLogout" />
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Style="background-color: #111111;">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h5" Class="mt-1" Style="color: #fff;">GMMS</MudText>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="DrawerVariant.Responsive" Style="background-color: #111111;"
+               @bind-Open:after="OnDrawerStateChanged">
+        <MudDrawerHeader Class="gmm-appbar__drawerHeader">
+            <MudIcon Icon="@Icons.Material.Filled.FitnessCenter" Class="mr-2" Style="color: #DC2626;" />
+            <MudText Typo="Typo.h6" Style="color: #fff;">GMMS</MudText>
         </MudDrawerHeader>
         @if (AuthTokenStore.IsLoggedIn)
         {
@@ -29,14 +36,50 @@
         }
     </MudDrawer>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="py-8">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-8">
             @Body
         </MudContainer>
     </MudMainContent>
 </MudLayout>
 
+<style>
+    .gmm-appbar__logo {
+        height: 30px;
+        width: 30px;
+        cursor: pointer;
+    }
+
+    .gmm-appbar__title {
+        margin: 0 0 0 10px;
+        font-weight: 700 !important;
+        letter-spacing: .5px;
+    }
+
+    .gmm-appbar__divider {
+        margin: 0 8px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .gmm-appbar__page {
+        color: rgba(255, 255, 255, 0.85);
+        text-transform: capitalize;
+    }
+
+    .gmm-appbar__drawerHeader {
+        padding-top: 12px;
+        padding-bottom: 4px;
+    }
+</style>
+
 @code {
     bool _drawerOpen = true;
+    string PageTitle { get; set; } = "Home";
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        PageTitle = SessionService.GetPageTitle(Navigation.Uri);
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -52,21 +95,29 @@
         }
     }
 
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        PageTitle = SessionService.GetPageTitle(e.Location);
+        StateHasChanged();
+    }
+
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
 
+    private void OnDrawerStateChanged()
+    {
+        StateHasChanged();
+    }
+
     private async Task HandleLogout()
     {
-        try
-        {
-            await ApiService.LogoutAsync<object>();
-        }
-        catch
-        {
-        }
-        AuthTokenStore.Clear();
-        Navigation.NavigateTo("/login", forceLoad: true);
+        await Session.LogoutAsync();
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }
