@@ -49,7 +49,7 @@ try
                .AllowAnyHeader()
                .AllowAnyMethod());
  });
- // Health checks (basic) — extended with DB connectivity check
+ // Health checks (basic) - extended with DB connectivity check
  builder.Services.AddHealthChecks()
      .AddCheck<DbHealthCheck>("database");
  // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

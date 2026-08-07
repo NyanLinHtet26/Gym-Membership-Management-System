@@ -19,8 +19,17 @@
                 <MudProgressCircular Indeterminate="true" Size="Size.Large" />
             </div>
         }
+        else if (loadFailed)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@errorMessage</MudAlert>
+        }
         else
         {
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
+            }
+
             <MudTextField @bind-Value="request.MemberCode"
                           @bind-Value:after="ConvertMemberCodeUpper"
                           Label="Member Code"
@@ -47,7 +56,7 @@
         <MudButton OnClick="Update"
                    Variant="Variant.Filled"
                    Color="Color.Primary"
-                   Disabled="@isSaving">
+                   Disabled="@(isSaving || loadFailed)">
             @if (isSaving)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />

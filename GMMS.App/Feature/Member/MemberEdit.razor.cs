@@ -23,6 +23,7 @@ namespace GMMS.App.Feature.Member
         private UpdateMemberRequestModel request = new();
         private bool isLoading = true;
         private bool isSaving;
+        private bool loadFailed;
         private string? errorMessage;
 
         protected override async Task OnInitializedAsync()
@@ -39,11 +40,13 @@ namespace GMMS.App.Feature.Member
                 else
                 {
                     errorMessage = result?.Message ?? "Member not found.";
+                    loadFailed = true;
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {

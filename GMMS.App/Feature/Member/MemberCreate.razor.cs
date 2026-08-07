@@ -21,11 +21,6 @@ namespace GMMS.App.Feature.Member
         private bool isLoading;
         private string? errorMessage;
 
-        private void OnMemberCodeChanged(string value)
-        {
-            request.MemberCode = value?.ToUpperInvariant() ?? "";
-        }
-
         private void Cancel()
         {
             MudDialog.Cancel();

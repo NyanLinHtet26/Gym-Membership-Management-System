@@ -17,11 +17,16 @@ namespace GMMS.App.Feature.Member
         [Inject]
         private AuthTokenStore AuthTokenStore { get; set; } = null!;
 
+        [Inject]
+        private NavigationManager Navigation { get; set; } = null!;
+
         [SupplyParameterFromQuery(Name = "page")]
         public int Page { get; set; } = 1;
 
+        [SupplyParameterFromQuery(Name = "search")]
+        public string? Search { get; set; }
+
         private List<MemberModel>? members;
-        private int pageNumber = 1;
         private int pageSize = 10;
         private int totalCount;
         private int totalPages;
@@ -56,6 +61,7 @@ namespace GMMS.App.Feature.Member
                 if (!token.IsCancellationRequested)
                 {
                     await LoadPage(1, false);
+                    SyncUrl(1);
                 }
             }
             catch (TaskCanceledException)
@@ -66,23 +72,36 @@ namespace GMMS.App.Feature.Member
         protected override async Task OnParametersSetAsync()
         {
             if (Page < 1) Page = 1;
-            _pageSelected = Page;
-            if (members is null || Page != pageNumber)
+
+            var requestedSearch = Search ?? "";
+            if (members is null || Page != _pageSelected || requestedSearch != (_searchTerm ?? ""))
             {
+                _searchTerm = requestedSearch;
+                _pageSelected = Page;
                 await LoadPage(Page);
             }
         }
 
         private async Task PageChanged(int page)
         {
-            _pageSelected = page;
             await LoadPage(page);
+            SyncUrl(page);
+        }
+
+        private async Task RetryAsync()
+        {
+            await LoadPage(_pageSelected);
+        }
+
+        private void SyncUrl(int page)
+        {
+            Navigation.NavigateTo($"/member-list?page={page}&search={Uri.EscapeDataString(_searchTerm ?? "")}", replace: true);
         }
 
         private async Task LoadPage(int page, bool showLoading = true)
         {
             errorMessage = null;
-            pageNumber = page;
+            _pageSelected = page;
 
             if (showLoading)
             {
@@ -91,13 +110,14 @@ namespace GMMS.App.Feature.Member
 
             try
             {
-                var result = await ApiService.GetMemberListAsync<Result<MemberListResponseModel>>(pageNumber, pageSize, _searchTerm);
+                var result = await ApiService.GetMemberListAsync<Result<MemberListResponseModel>>(_pageSelected, pageSize, _searchTerm);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
                     members = result.Data.Members;
                     totalCount = result.Data.TotalCount;
                     totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
                     if (totalPages < 1) totalPages = 1;
+                    if (_pageSelected > totalPages) _pageSelected = totalPages;
                 }
                 else
                 {
@@ -122,6 +142,7 @@ namespace GMMS.App.Feature.Member
             if (result is not null && !result.Canceled)
             {
                 await LoadPage(1);
+                SyncUrl(1);
             }
         }
 
@@ -133,7 +154,7 @@ namespace GMMS.App.Feature.Member
 
             if (result is not null && !result.Canceled)
             {
-                await LoadPage(pageNumber);
+                await LoadPage(_pageSelected);
             }
         }
 
@@ -145,7 +166,7 @@ namespace GMMS.App.Feature.Member
 
             if (result is not null && !result.Canceled)
             {
-                await LoadPage(pageNumber);
+                await LoadPage(_pageSelected);
             }
         }
 

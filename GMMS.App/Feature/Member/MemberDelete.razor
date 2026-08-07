@@ -36,7 +36,7 @@
         <MudButton OnClick="ConfirmDelete"
                    Variant="Variant.Filled"
                    Color="Color.Error"
-                   Disabled="@isDeleting">
+                   Disabled="@(isDeleting || member is null)">
             @if (isDeleting)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />

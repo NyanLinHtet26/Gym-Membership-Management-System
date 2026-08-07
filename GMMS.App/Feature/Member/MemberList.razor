@@ -1,68 +1,276 @@
 ﻿@page "/member-list"
 
 <MudContainer MaxWidth="MaxWidth.Large">
-    <MudPaper Class="pa-6" Elevation="2">
-        <MudText Typo="Typo.h4" Class="mb-4">Member List</MudText>
+    <div class="gmm-member__head">
+        <div>
+            <MudText Typo="Typo.h4" Class="gmm-member__title">Members</MudText>
+            <MudText Typo="Typo.body2" Class="gmm-member__subtitle">Add new joiners and open their memberships.</MudText>
+        </div>
+        @if (AuthTokenStore.CurrentUser?.Role != AuthTokenStore.RoleOwner)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-member__add"
+                       OnClick="OpenCreateDialog"
+                       StartIcon="@Icons.Material.Filled.PersonAdd">
+                New Member
+            </MudButton>
+        }
+    </div>
 
-        <div class="d-flex flex-wrap justify-space-between align-start mb-4" style="gap: 16px;">
-            <MudTextField @bind-Value="searchTerm" Placeholder="Search by code or name..." Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" Immediate="true" Style="width: 100%; max-width: 380px;" />
-
-            <div class="d-flex flex-wrap align-center" style="gap: 12px;">
-                <MudText Typo="Typo.body2" Class="d-flex align-center">
-                    Total: <strong class="ml-2 mud-primary-text">@totalCount</strong>
-                </MudText>
-                @if (AuthTokenStore.CurrentUser?.Role != "Owner")
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small">
-                        Create Member
-                    </MudButton>
-                }
+    <div class="gmm-member__stats">
+        <div class="gmm-member__stat">
+            <MudIcon Icon="@Icons.Material.Filled.People" Class="gmm-member__stat-icon" />
+            <div>
+                <MudText Typo="Typo.h6" Class="gmm-member__stat-value">@totalCount</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Total Members</MudText>
             </div>
         </div>
+    </div>
 
-        @if (isLoading)
-        {
-            <div class="d-flex justify-center pa-12">
-                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+    <MudTextField @bind-Value="searchTerm"
+                  Placeholder="Search by code or name..."
+                  Variant="Variant.Outlined"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Clearable="true"
+                  Immediate="true" />
+
+    @if (isLoading)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-member__table gmm-member__skeleton">
+            <div class="pa-4 d-flex flex-column gmm-member__skeleton-rows">
+                @for (var i = 0; i < 6; i++)
+                {
+                    <div class="d-flex align-center gmm-member__skeleton-row">
+                        <MudSkeleton Type="SkeletonType.Circle" Width="28px" Height="28px" />
+                        <MudSkeleton Type="SkeletonType.Text" Width="110px" Height="22px" />
+                        <MudSkeleton Type="SkeletonType.Text" Width="200px" Height="22px" />
+                        <MudSkeleton Type="SkeletonType.Text" Width="150px" Height="22px" />
+                        <MudSkeleton Type="SkeletonType.Text" Width="150px" Height="22px" />
+                        <MudSkeleton Type="SkeletonType.Text" Width="120px" Height="22px" />
+                    </div>
+                }
             </div>
-        }
-        else if (errorMessage is not null)
-        {
-            <MudAlert Severity="Severity.Error" Class="mt-4">@errorMessage</MudAlert>
-        }
-        else if (members is not null && members.Count > 0)
-        {
-            <MudTable Items="members" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm" Elevation="1" Class="rounded">
+        </MudPaper>
+    }
+    else if (errorMessage is not null)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-member__error pa-6 d-flex flex-column align-center">
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Class="mud-text-secondary mb-3" />
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="w-100">
+                @errorMessage
+            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mt-3">
+                Check your connection to the server, then try again.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-member__create mt-4"
+                       OnClick="RetryAsync" StartIcon="@Icons.Material.Filled.Refresh">
+                Try Again
+            </MudButton>
+        </MudPaper>
+    }
+    else if (members is not null && members.Count > 0)
+    {
+        <MudPaper Elevation="0" Class="gmm-member__table" Outlined="true">
+            <MudTable Items="members" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
-                    <MudTh>#</MudTh>
+                    <MudTh Style="width: 56px;">#</MudTh>
                     <MudTh>Member Code</MudTh>
                     <MudTh>Name</MudTh>
                     <MudTh>Created At</MudTh>
-                    <MudTh Style="text-align: center;">Actions</MudTh>
+                    <MudTh>Updated At</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="#">@context.MemberId</MudTd>
-                    <MudTd DataLabel="Member Code">@context.MemberCode</MudTd>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Created At">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
-                    <MudTd DataLabel="Actions" Style="text-align: center;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Href="@($"/membership-list?memberId={context.MemberId}")" Size="Size.Small" />
-                        @if (AuthTokenStore.CurrentUser?.Role != "Owner")
+                    <MudTd DataLabel="#" Style="color: var(--mud-palette-text-secondary);">@context.MemberId</MudTd>
+                    <MudTd DataLabel="Member Code">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="gmm-member__code">@context.MemberCode</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Name">
+                        <strong>@context.Name</strong>
+                    </MudTd>
+                    <MudTd DataLabel="Created At" Style="color: var(--mud-palette-text-secondary);">
+                        @context.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                    </MudTd>
+                    <MudTd DataLabel="Updated At" Style="color: var(--mud-palette-text-secondary);">
+                        @(context.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align: right; white-space: nowrap;">
+                        <MudTooltip Text="View memberships">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info"
+                                           Href="@($"/membership-list?memberId={context.MemberId}")" Size="Size.Small" />
+                        </MudTooltip>
+                        @if (AuthTokenStore.CurrentUser?.Role != AuthTokenStore.RoleOwner)
                         {
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context.MemberId))" Size="Size.Small" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context.MemberId))" Size="Size.Small" />
+                            <MudTooltip Text="Edit member">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                               OnClick="@(() => OpenEditDialog(context.MemberId))" Size="Size.Small" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete member">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                               OnClick="@(() => OpenDeleteDialog(context.MemberId))" Size="Size.Small" />
+                            </MudTooltip>
                         }
                     </MudTd>
                 </RowTemplate>
             </MudTable>
+        </MudPaper>
 
-            <div class="d-flex flex-column align-center mt-6">
-                <MudPagination BoundaryCount="1" MiddleCount="1" Count="@totalPages" Selected="@_pageSelected" SelectedChanged="PageChanged" />
-            </div>
-        }
-        else
-        {
-            <MudAlert Severity="Severity.Info" Class="mt-4">No members found.</MudAlert>
-        }
-    </MudPaper>
+        <div class="gmm-member__pagination">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Page @_pageSelected of @totalPages · @totalCount members
+            </MudText>
+            <MudPagination BoundaryCount="1" MiddleCount="1" Count="@totalPages" Selected="@_pageSelected" SelectedChanged="PageChanged" />
+        </div>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-member__empty pa-8 d-flex flex-column align-center">
+            <MudIcon Icon="@Icons.Material.Filled.PersonSearch" Size="Size.Large" Class="mud-text-secondary mb-3" />
+            <MudText Typo="Typo.body1" Class="mb-1"><strong>No members found</strong></MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="text-align: center; max-width: 420px;">
+                @(string.IsNullOrWhiteSpace(_searchTerm) ? "You haven't added any members yet. Add the first one to get started." : $"Nothing matches \"{_searchTerm}\". Try a different code or name.")
+            </MudText>
+            @if (string.IsNullOrWhiteSpace(_searchTerm) && AuthTokenStore.CurrentUser?.Role != AuthTokenStore.RoleOwner)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-member__add mt-4"
+                           OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.PersonAdd">
+                    New Member
+                </MudButton>
+            }
+        </MudPaper>
+    }
 </MudContainer>
+
+<style>
+    .gmm-member__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+
+    .gmm-member__title {
+        font-weight: 700 !important;
+        text-wrap: balance;
+    }
+
+    .gmm-member__subtitle {
+        color: var(--mud-palette-text-secondary);
+        text-wrap: pretty;
+    }
+
+    .gmm-member__create {
+        background-color: var(--mud-palette-primary);
+        border-radius: 8px;
+    }
+
+    .gmm-member__create:hover {
+        filter: brightness(1.15);
+    }
+
+    .gmm-member__add {
+        background-color: #10B981;
+        border-radius: 8px;
+    }
+
+    .gmm-member__add:hover {
+        filter: brightness(1.15);
+    }
+
+    .gmm-member__stats {
+        margin: 20px 0;
+    }
+
+    .gmm-member__stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+        background-color: var(--mud-palette-surface);
+    }
+
+    .gmm-member__stat-icon {
+        color: #A78BFA;
+    }
+
+    .gmm-member__stat-value {
+        color: #A78BFA;
+        margin: 0;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .gmm-member__table {
+        margin-top: 8px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .gmm-member__table .mud-table-body td {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .gmm-member__code.mud-chip {
+        background-color: var(--mud-palette-background-grey);
+        color: var(--mud-palette-text-primary);
+        border-left: 3px solid #A78BFA;
+        border-radius: 6px;
+        font-family: 'Cascadia Mono', 'Consolas', monospace;
+        letter-spacing: .3px;
+    }
+
+    .gmm-member__pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .gmm-member__error {
+        margin-top: 8px;
+        border-radius: 12px;
+    }
+
+    .gmm-member__skeleton-rows {
+        gap: 16px;
+    }
+
+    .gmm-member__skeleton-row {
+        gap: 32px;
+    }
+
+    .gmm-member__skeleton-row .mud-skeleton:nth-child(1) {
+        flex: 0 0 28px;
+    }
+
+    .gmm-member__skeleton-row .mud-skeleton:nth-child(2) {
+        flex: 0 0 110px;
+    }
+
+    .gmm-member__skeleton-row .mud-skeleton:nth-child(3) {
+        flex: 1 1 200px;
+    }
+
+    .gmm-member__skeleton-row .mud-skeleton:nth-child(4) {
+        flex: 0 0 150px;
+    }
+
+    .gmm-member__skeleton-row .mud-skeleton:nth-child(5) {
+        flex: 0 0 150px;
+    }
+
+    .gmm-member__skeleton-row .mud-skeleton:nth-child(6) {
+        flex: 0 0 120px;
+    }
+
+    .gmm-member__empty {
+        margin-top: 24px;
+        border-radius: 12px;
+    }
+</style>
