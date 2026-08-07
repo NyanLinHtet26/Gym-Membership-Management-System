@@ -3,13 +3,14 @@
 @inject AuthTokenStore AuthTokenStore
 @inject NavigationManager Navigation
 @inject SessionService Session
+@using GMMS.App.Theme
 
-<MudThemeProvider />
+<MudThemeProvider Theme="GMMSTheme.Theme" IsDarkMode="true" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
 <MudLayout>
-    <MudAppBar Elevation="1" Style="background-color: #111111; color: #fff;">
+    <MudAppBar Elevation="1">
         <img src="logo.svg" alt="Gym Logo" class="ml-2 gmm-appbar__logo" @onclick="(e => DrawerToggle())" />
         <MudText Typo="Typo.h6" Class="gmm-appbar__title">GMMS</MudText>
         @if (AuthTokenStore.IsLoggedIn)
@@ -21,13 +22,13 @@
         @if (AuthTokenStore.IsLoggedIn)
         {
             <CalendarDropdown />
-            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Title="Log out" OnClick="HandleLogout" />
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Title="Log out" Style="color: #A78BFA;" OnClick="HandleLogout" />
         }
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="DrawerVariant.Responsive" Style="background-color: #111111;"
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="DrawerVariant.Responsive"
                @bind-Open:after="OnDrawerStateChanged">
         <MudDrawerHeader Class="gmm-appbar__drawerHeader">
-            <MudIcon Icon="@Icons.Material.Filled.FitnessCenter" Class="mr-2" Style="color: #DC2626;" />
+            <MudIcon Icon="@Icons.Material.Filled.FitnessCenter" Class="mr-2" Style="color: #A78BFA;" />
             <MudText Typo="Typo.h6" Style="color: #fff;">GMMS</MudText>
         </MudDrawerHeader>
         @if (AuthTokenStore.IsLoggedIn)

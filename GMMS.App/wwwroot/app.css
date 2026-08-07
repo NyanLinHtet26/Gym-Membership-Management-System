@@ -18,7 +18,7 @@ html, body {
 }
 
 a, .btn-link {
-    color: #006bb7;
+    color: #A78BFA;
 }
 
 .btn-primary {
@@ -83,10 +83,10 @@ h1:focus {
 .gmm-nav-dark .mud-navmenu.mud-navmenu-primary .mud-nav-link.active:not(.mud-nav-link-disabled):hover {
     color: #fff !important;
     font-weight: 600 !important;
-    background-color: rgba(220, 38, 38, 0.16);
+    background-color: rgba(124, 58, 237, 0.18);
     border-radius: 8px;
     position: relative;
-    --mud-ripple-color: #DC2626;
+    --mud-ripple-color: #7C3AED;
 }
 
 .gmm-nav-dark .mud-navmenu.mud-navmenu-primary .mud-nav-link.active:not(.mud-nav-link-disabled) .mud-nav-link-icon {
@@ -101,7 +101,7 @@ h1:focus {
     bottom: 25%;
     width: 4px;
     border-radius: 4px;
-    background-color: #DC2626;
+    background-color: #7C3AED;
 }
 
 .gmm-nav-dark .mud-text-secondary {
@@ -141,6 +141,13 @@ h1:focus {
 .gmm-nav-popover .mud-menu-item:hover .mud-icon-root,
 .gmm-nav-popover .mud-menu-item:focus-visible .mud-icon-root {
     color: #fff;
+}
+
+.gmm-nav-popover .gmm-nav-logout,
+.gmm-nav-popover .gmm-nav-logout .mud-icon-root,
+.gmm-nav-popover .gmm-nav-logout:hover .mud-icon-root,
+.gmm-nav-popover .gmm-nav-logout:focus-visible .mud-icon-root {
+    color: #A78BFA;
 }
 
 .gmm-nav-popover .mud-divider {
