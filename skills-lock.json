@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "backend-architect": {
+      "source": "rmyndharis/antigravity-skills",
+      "sourceType": "github",
+      "skillPath": "skills/backend-architect/SKILL.md",
+      "computedHash": "4feefce5cbbe7fb54b40fe7cae85c06837789ba569966a47ddfcd4cc3cf81741"
+    },
+    "blazor-expert": {
+      "source": "markpitt/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/blazor-expert/SKILL.md",
+      "computedHash": "00d1b81b5cd6eaa9f8694167cec3f0ac1b6026ff01f18103dbfaa486503f331c"
+    },
+    "code-auditor": {
+      "source": "mhattingpete/claude-skills-marketplace",
+      "sourceType": "github",
+      "skillPath": "productivity-skills-plugin/skills/code-auditor/SKILL.md",
+      "computedHash": "0e256f0158b9cc5ececffc81d628bf09addf6fa59fba2f2bde8f22e22e20205a"
+    },
+    "csharp-developer": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/csharp-developer/SKILL.md",
+      "computedHash": "42e372314889f097ba72053461500ace703cbccaa7fa71a00aae541fcbd65293"
+    },
+    "ui-ux-designer": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ux-designer/SKILL.md",
+      "computedHash": "7051bce861581a88407970edf78fc3f448fd3f0d176566cdfbc16abe7fff8211"
+    }
+  }
+}
