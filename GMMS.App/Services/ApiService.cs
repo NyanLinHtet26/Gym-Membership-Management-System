@@ -242,6 +242,15 @@
             return await ExecuteAsync<TResponse>(() => _http.DeleteAsync<TResponse>(endpoint));
         }
         #endregion
+        #region Dashboard
+
+        public async Task<TResponse?> GetDashboardAsync<TResponse>()
+        {
+            return await ExecuteAsync<TResponse>(
+                () => _http.GetAsync<TResponse>(ApiEndpoints.Dashboard));
+        }
+
+        #endregion
 
         private async Task<TResponse?> ExecuteAsync<TResponse>(Func<Task<TResponse?>> action)
         {

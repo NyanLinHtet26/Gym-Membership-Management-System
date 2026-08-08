@@ -1,8 +1,8 @@
 @using MudBlazor
 
-<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
     <TitleContent>
-        <MudText Typo="Typo.h6">
+        <MudText Typo="Typo.h6" Class="gmm-ms__edit-title">
             <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" Color="Color.Primary" /> Edit Membership
         </MudText>
     </TitleContent>
@@ -15,39 +15,94 @@
 
         @if (isLoadingData)
         {
-            <div class="d-flex justify-center pa-6">
-                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <div class="d-flex flex-column gmm-ms__edit-skeleton">
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+            </div>
+        }
+        else if (loadFailed)
+        {
+            <div class="d-flex flex-column align-center pa-4">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3" Style="text-align: center;">
+                    We couldn't load this membership. Check your connection, then try again.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RetryAsync"
+                           StartIcon="@Icons.Material.Filled.Refresh">
+                    Try Again
+                </MudButton>
             </div>
         }
         else if (detail is not null)
         {
-            
-            <MudTextField Value="@detail.MemberName" Label="Member" Variant="Variant.Outlined"
-                          ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-4" />
-
-            <div class="mb-4">
-                <MudText Typo="Typo.body2" Class="mb-1"><strong>Plan</strong> <span class="text-danger">*</span></MudText>
-                <select class="form-select" @bind-value="_planStr" @bind-value:event="onchange">
-                    <option value="">-- Select Plan --</option>
-                    @if (plans is not null)
-                    {
-                        @foreach (var p in plans)
-                        {
-                            <option value="@p.MemberShipPlanId">@p.PlanName (@p.DurationDays days)</option>
-                        }
-                    }
-                </select>
+            <div class="d-flex flex-wrap align-center mb-4" style="gap: 12px;">
+                <MudTextField Value="@detail.MemberName" Label="Member" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Person" Class="gmm-field-constrained" />
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="gmm-ms__edit-code">@detail.MemberCode</MudChip>
             </div>
 
-            <MudTextField Value="@detail.StartDate.ToString("yyyy-MM-dd")" Label="Start Date"
-                          Variant="Variant.Outlined" ReadOnly="true"
-                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-4" />
+            <MudDivider Class="mb-4" />
 
-            <MudTextField Value="@(newEndDate?.ToString("yyyy-MM-dd") ?? "Select a plan")"
-                          Label="New End Date (auto-calculated)" Variant="Variant.Outlined" ReadOnly="true"
-                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Event"
-                          Class="mb-2" />
+            <MudText Typo="Typo.body2" Class="mb-1 gmm-ms__edit-label">
+                <strong>Plan</strong> <span class="text-danger">*</span>
+            </MudText>
+            <MudSelect T="int" Value="@request.MembershipPlanId" ValueChanged="@OnPlanValueChanged"
+                       Variant="Variant.Outlined" Label="Select a plan"
+                       AnchorOrigin="Origin.BottomCenter" Class="gmm-field-constrained"
+                       HelperText="Changing the plan recalculates the end date.">
+                @if (plans is not null)
+                {
+                    @foreach (var p in plans)
+                    {
+                        <MudSelectItem Value="@(p.MemberShipPlanId)">@p.PlanName (@p.DurationDays days - @p.Price.ToString("C2"))</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+
+            @if (SelectedPlan is not null)
+            {
+                <div class="gmm-ms__edit-plan-summary mt-3">
+                    <div class="gmm-ms__edit-plan-row">
+                        <span class="mud-text-secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Class="mr-1" />Duration
+                        </span>
+                        <strong>@SelectedPlan.DurationDays days</strong>
+                    </div>
+                    <div class="gmm-ms__edit-plan-row">
+                        <span class="mud-text-secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" Class="mr-1" />Price
+                        </span>
+                        <strong>@SelectedPlan.Price.ToString("C2")</strong>
+                    </div>
+                    <div class="gmm-ms__edit-plan-row">
+                        <span class="mud-text-secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" Class="mr-1" />New End Date
+                        </span>
+                        <strong class="gmm-ms__edit-plan-end">@(newEndDate?.ToString("yyyy-MM-dd") ?? "—")</strong>
+                    </div>
+                </div>
+            }
+
+            <MudDivider Class="my-4" />
+
+            <div class="d-flex flex-wrap mb-3" style="gap: 12px;">
+                <MudTextField Value="@detail.StartDate.ToString("yyyy-MM-dd")" Label="Start Date"
+                              Variant="Variant.Outlined" ReadOnly="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CalendarToday"
+                              Class="gmm-field-date" />
+                <MudTextField Value="@(newEndDate?.ToString("yyyy-MM-dd") ?? "—")" Label="New End Date (auto-calculated)"
+                              Variant="Variant.Outlined" ReadOnly="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Event"
+                              Class="gmm-field-date" />
+            </div>
+
+            <div class="gmm-ms__edit-status">
+                <MudText Typo="Typo.body2" Class="mb-1 gmm-ms__edit-label">Current Status</MudText>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@GetStatusColor(detail.Status)" Class="gmm-ms__edit-chip">
+                    @detail.Status
+                </MudChip>
+            </div>
         }
     </DialogContent>
 
@@ -55,9 +110,9 @@
         <MudButton OnClick="Cancel" Variant="Variant.Text" Class="mr-2">Cancel</MudButton>
         <MudButton OnClick="Update"
                    Variant="Variant.Filled"
-                   Color="Color.Primary"
+                   Class="gmm-ms__edit-save"
                    StartIcon="@Icons.Material.Filled.Save"
-                   Disabled="@isSaving">
+                   Disabled="@(isSaving || loadFailed || detail is null)">
             @if (isSaving)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -66,3 +121,74 @@
         </MudButton>
     </DialogActions>
 </MudDialog>
+
+<style>
+    .gmm-ms__edit-title {
+        font-weight: 700 !important;
+    }
+
+    .gmm-ms__edit-label {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .gmm-ms__edit-skeleton {
+        gap: 16px;
+    }
+
+    .gmm-ms__edit-code.mud-chip {
+        background-color: var(--mud-palette-background-grey);
+        color: var(--mud-palette-text-primary);
+        border-left: 3px solid #60A5FA;
+        border-radius: 6px;
+        font-family: 'Cascadia Mono', 'Consolas', monospace;
+        letter-spacing: .3px;
+    }
+
+    .gmm-ms__edit-plan-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+        background-color: var(--mud-palette-surface);
+    }
+
+    .gmm-ms__edit-plan-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .gmm-ms__edit-plan-end {
+        color: #60A5FA;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .gmm-ms__edit-chip {
+        border-radius: 6px;
+    }
+
+    .gmm-ms__edit-save {
+        background-color: #10B981;
+        border-radius: 8px;
+    }
+
+    .gmm-ms__edit-save:hover {
+        filter: brightness(1.15);
+    }
+
+    .gmm-field-constrained {
+        flex: 0 1 320px !important;
+        min-width: 200px !important;
+        max-width: 320px !important;
+        width: auto !important;
+    }
+
+    .gmm-field-date {
+        flex: 0 0 180px !important;
+        max-width: 180px !important;
+        min-width: 160px !important;
+        width: auto !important;
+    }
+</style>

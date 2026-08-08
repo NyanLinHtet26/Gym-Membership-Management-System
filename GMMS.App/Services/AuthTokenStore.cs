@@ -4,6 +4,9 @@ namespace GMMS.App.Services
 {
     public class AuthTokenStore
     {
+        public const string RoleOwner = "Owner";
+        public const string RoleAdmin = "Admin";
+
         public string? AccessToken { get; private set; }
         public LoginResponseModel? CurrentUser { get; private set; }
         public bool IsLoggedIn => !string.IsNullOrEmpty(AccessToken);

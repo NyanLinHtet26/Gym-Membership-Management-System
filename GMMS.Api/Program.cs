@@ -4,6 +4,7 @@ using GMMS.Api.Health;
 using GMMS.Api.Middleware;
 using GMMS.Database.AppDbContextModels;
 using GMMS.Domain.Features.Auth;
+using GMMS.Domain.Features.DashBoard;
 using GMMS.Domain.Features.Member;
 using GMMS.Domain.Features.Member.Models;
 using GMMS.Domain.Features.MemberShip;
@@ -143,8 +144,10 @@ try
  builder.Services.AddScoped<PaymentService>();
  builder.Services.AddScoped<AuthService>();
  builder.Services.AddScoped<UserService>();
+ builder.Services.AddScoped<DashBoardService>();
  builder.Services.AddScoped<TokenService>();
  builder.Services.AddScoped<CookieService>();
+
 
 
  var app = builder.Build();

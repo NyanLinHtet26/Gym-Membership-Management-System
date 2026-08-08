@@ -23,10 +23,21 @@ namespace GMMS.App.Feature.Member
         private MemberModel? member;
         private bool isLoading = true;
         private bool isDeleting;
+        private bool loadFailed;
+        private bool confirmed;
         private string? errorMessage;
 
         protected override async Task OnInitializedAsync()
         {
+            await LoadAsync();
+        }
+
+        private async Task LoadAsync()
+        {
+            isLoading = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var result = await ApiService.GetMemberDetailsAsync<Result<MemberModel>>(MemberId);
@@ -37,17 +48,21 @@ namespace GMMS.App.Feature.Member
                 else
                 {
                     errorMessage = result?.Message ?? "Failed to load member.";
+                    loadFailed = true;
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {
                 isLoading = false;
             }
         }
+
+        private async Task RetryAsync() => await LoadAsync();
 
         private void Cancel()
         {
@@ -56,6 +71,11 @@ namespace GMMS.App.Feature.Member
 
         private async Task ConfirmDelete()
         {
+            if (!confirmed)
+            {
+                return;
+            }
+
             isDeleting = true;
             errorMessage = null;
             StateHasChanged();

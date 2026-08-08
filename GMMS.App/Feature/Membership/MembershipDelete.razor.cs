@@ -26,10 +26,21 @@ namespace GMMS.App.Feature.Membership
         private MemberShipModel? membership;
         private bool isLoading = true;
         private bool isDeleting;
+        private bool loadFailed;
+        private bool confirmed;
         private string? errorMessage;
 
         protected override async Task OnInitializedAsync()
         {
+            await LoadAsync();
+        }
+
+        private async Task LoadAsync()
+        {
+            isLoading = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var result = await ApiService.GetMembershipDetailsAsync<Result<MembershipDetailModel>>(MembershipId);
@@ -52,17 +63,21 @@ namespace GMMS.App.Feature.Membership
                 else
                 {
                     errorMessage = result?.Message ?? "Failed to load membership.";
+                    loadFailed = true;
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {
                 isLoading = false;
             }
         }
+
+        private async Task RetryAsync() => await LoadAsync();
 
         private void Cancel()
         {
@@ -71,6 +86,11 @@ namespace GMMS.App.Feature.Membership
 
         private async Task ConfirmDelete()
         {
+            if (!confirmed)
+            {
+                return;
+            }
+
             isDeleting = true;
             errorMessage = null;
             StateHasChanged();
@@ -96,6 +116,17 @@ namespace GMMS.App.Feature.Membership
             {
                 isDeleting = false;
             }
+        }
+
+        private Color GetStatusColor(string status)
+        {
+            return status switch
+            {
+                "Active" => Color.Success,
+                "Pending" => Color.Warning,
+                "Expired" => Color.Error,
+                _ => Color.Default
+            };
         }
     }
 }

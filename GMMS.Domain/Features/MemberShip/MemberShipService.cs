@@ -29,7 +29,6 @@ namespace GMMS.Domain.Features.MemberShip
             IValidator<CreateMemberShipRequestModel> createValidator,
             IValidator<UpdateMembershipRequestModel> updateValidator,
             ILogger<MemberShipService> logger)
-
         {
             _db = db;
             _listValidator = listValidator;
@@ -43,6 +42,7 @@ namespace GMMS.Domain.Features.MemberShip
         {
             _logger.LogInformation("Retrieving membership list for MemberId: {MemberId}, PageNumber: {PageNumber}, PageSize: {PageSize}", request.MemberId, request.PageNumber, request.PageSize);
 
+            #region Check: Request is valid (400)
             var validationResult = await _listValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
@@ -53,61 +53,67 @@ namespace GMMS.Domain.Features.MemberShip
                     Message = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage))
                 };
             }
+            #endregion
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
             var query = _db.TblMemberships
-                    .AsNoTracking()
-                    .Where(x => !x.IsDeleted && x.MemberId == request.MemberId);
+                .AsNoTracking()
+                .Where(x => !x.IsDeleted && x.MemberId == request.MemberId);
 
-                var totalCount = query.Count();
+            var totalCount = await query.CountAsync();
 
-                var memberships = await query
-                    .OrderByDescending(x => x.MembershipId)
-                    .Skip((request.PageNumber - 1) * request.PageSize)
-                    .Take(request.PageSize)
-                    .Select(x => new MemberShipModel
-                    {
-                        MembershipId = x.MembershipId,
+            var memberships = await query
+                .OrderByDescending(x => x.MembershipId)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(x => new MemberShipModel
+                {
+                    MembershipId = x.MembershipId,
 
-                        MemberCode = x.Member.MemberCode,
-                        MemberName = x.Member.Name,
+                    MemberCode = x.Member.MemberCode,
+                    MemberName = x.Member.Name,
 
-                        PlanCode = x.MembershipPlan.PlanCode,
-                        PlanName = x.MembershipPlan.PlanName,
+                    PlanCode = x.MembershipPlan.PlanCode,
+                    PlanName = x.MembershipPlan.PlanName,
 
-                        StartDate = x.StartDate,
-                        EndDate = x.EndDate,
-                        Status = x.Status,
+                    StartDate = x.StartDate,
+                    EndDate = x.EndDate,
+                    Status = x.EndDate < today ? "Expired" : x.Status,
 
-                        CreatedByUser = x.CreatedBy + " - " + _db.TblUsers
+                    CreatedByUser = x.CreatedBy + " - " + _db.TblUsers
                         .Where(u => u.UserId == x.CreatedBy)
                         .Select(u => u.UserName)
                         .FirstOrDefault(),
 
-                        UpdatedByUser = x.UpdatedBy.HasValue
-                            ? x.UpdatedBy.Value + " - " + _db.TblUsers
+                    UpdatedByUser = x.UpdatedBy.HasValue
+                        ? x.UpdatedBy.Value + " - " + _db.TblUsers
                             .Where(u => u.UserId == x.UpdatedBy.Value)
                             .Select(u => u.UserName)
                             .FirstOrDefault()
-                            : null
-                    })
-                    .ToListAsync();
+                        : null
+                })
+                .ToListAsync();
 
-                _logger.LogInformation("Retrieved {Count} memberships out of {TotalCount} total for MemberId: {MemberId}", memberships.Count, totalCount, request.MemberId);
+            _logger.LogInformation("Retrieved {Count} memberships out of {TotalCount} total for MemberId: {MemberId}", memberships.Count, totalCount, request.MemberId);
 
-                return new Result<MemberShipListResponseModel>
+            return new Result<MemberShipListResponseModel>
+            {
+                IsSuccess = true,
+                Message = "Memberships retrieved successfully.",
+                Data = new MemberShipListResponseModel
                 {
-                    IsSuccess = true,
-                    Message = "Memberships retrieved successfully.",
-                    Data = new MemberShipListResponseModel
-                    {
-                        TotalCount = totalCount,
-                        MemberShips = memberships
-                    }
-                };
+                    TotalCount = totalCount,
+                    MemberShips = memberships
+                }
+            };
         }
-        public async Task <Result<MemberShipListResponseModel>> GetAllList(AllMemberShipListRequestModel request)
+
+        public async Task<Result<MemberShipListResponseModel>> GetAllList(AllMemberShipListRequestModel request)
         {
             _logger.LogInformation("Retrieving all memberships with PageNumber: {PageNumber}, PageSize: {PageSize}, SearchTerm: {SearchTerm}, Status: {Status}", request.PageNumber, request.PageSize, request.SearchTerm, request.Status);
 
+            #region Check: Request is valid (400)
             var validationResult = await _allListValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
@@ -118,154 +124,168 @@ namespace GMMS.Domain.Features.MemberShip
                     Message = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage))
                 };
             }
+            #endregion
 
-            
-                var query = _db.TblMemberships
-                    .AsNoTracking()
-                    .Where(x => !x.IsDeleted);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-                if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            var query = _db.TblMemberships
+                .AsNoTracking()
+                .Where(x => !x.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var search = request.SearchTerm.Trim().ToLower();
+                query = query.Where(x => x.Member.MemberCode.ToLower().Contains(search)
+                    || x.Member.Name.Contains(search)
+                    || x.MembershipPlan.PlanName.Contains(search));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                query = request.Status switch
                 {
-                    var search = request.SearchTerm.Trim().ToLower();
-                    query = query.Where(x => x.Member.MemberCode.ToLower().Contains(search)
-                        || x.Member.Name.Contains(search)
-                        || x.MembershipPlan.PlanName.Contains(search));
-                }
-
-                if (!string.IsNullOrWhiteSpace(request.Status))
-                {
-                    query = query.Where(x => x.Status == request.Status);
-                }
-
-                if (request.StartDateFrom.HasValue)
-                {
-                    query = query.Where(x => x.StartDate >= request.StartDateFrom.Value);
-                }
-
-                if (request.StartDateTo.HasValue)
-                {
-                    query = query.Where(x => x.StartDate <= request.StartDateTo.Value);
-                }
-
-                if (request.EndDateFrom.HasValue)
-                {
-                    query = query.Where(x => x.EndDate >= request.EndDateFrom.Value);
-                }
-
-                if (request.EndDateTo.HasValue)
-                {
-                    query = query.Where(x => x.EndDate <= request.EndDateTo.Value);
-                }
-
-                var totalCount = await query.CountAsync();
-
-                var memberships = await query
-                    .OrderByDescending(x => x.MembershipId)
-                    .Skip((request.PageNumber - 1) * request.PageSize)
-                    .Take(request.PageSize)
-                    .Select(x => new MemberShipModel
-                    {
-                        MembershipId = x.MembershipId,
-                        MemberCode = x.Member.MemberCode,
-                        MemberName = x.Member.Name,
-
-                        PlanCode = x.MembershipPlan.PlanCode,
-                        PlanName = x.MembershipPlan.PlanName,
-
-                        StartDate = x.StartDate,
-                        EndDate = x.EndDate,
-                        Status = x.Status,
-
-                        CreatedByUser = x.CreatedBy + " - " + _db.TblUsers
-                        .Where(u => u.UserId == x.CreatedBy).Select(u => u.UserName)
-                        .FirstOrDefault(),
-
-                        UpdatedByUser = x.UpdatedBy.HasValue
-                            ? x.UpdatedBy.Value + " - " + _db.TblUsers
-                            .Where(u => u.UserId == x.UpdatedBy.Value)
-                            .Select(u => u.UserName).FirstOrDefault()
-                            : null
-                    })
-                    .ToListAsync();
-
-                _logger.LogInformation("Retrieved {Count} all memberships out of {TotalCount} total.", memberships.Count, totalCount);
-
-                return new Result<MemberShipListResponseModel>
-                {
-                    IsSuccess = true,
-                    Message = "All memberships retrieved successfully.",
-                    Data = new MemberShipListResponseModel
-                    {
-                        TotalCount = totalCount,
-                        MemberShips = memberships
-                    }
+                    "Active" => query.Where(x => x.EndDate >= today),
+                    "Expired" => query.Where(x => x.EndDate < today),
+                    _ => query.Where(x => x.Status == request.Status)
                 };
-        }
-        public async Task <Result<MembershipDetailModel>> GetById(int membershipId)
-        {
-            _logger.LogInformation("Retrieving membership with ID: {MembershipId}", membershipId);
+            }
 
-                var membership = await _db.TblMemberships
-                    .AsNoTracking()
-                    .Where(x => !x.IsDeleted && x.MembershipId == membershipId)
-                    .Select(x => new MembershipDetailModel
-                    {
-                        MembershipId = x.MembershipId,
+            if (request.StartDateFrom.HasValue)
+            {
+                query = query.Where(x => x.StartDate >= request.StartDateFrom.Value);
+            }
 
-                        MemberId = x.MemberId,
-                        MemberCode = x.Member.MemberCode,
-                        MemberName = x.Member.Name,
+            if (request.StartDateTo.HasValue)
+            {
+                query = query.Where(x => x.StartDate <= request.StartDateTo.Value);
+            }
 
-                        MembershipPlanId = x.MembershipPlanId,
-                        PlanCode = x.MembershipPlan.PlanCode,
-                        PlanName = x.MembershipPlan.PlanName,
+            if (request.EndDateFrom.HasValue)
+            {
+                query = query.Where(x => x.EndDate >= request.EndDateFrom.Value);
+            }
 
-                        StartDate = x.StartDate,
-                        EndDate = x.EndDate,
-                        Status = x.Status,
+            if (request.EndDateTo.HasValue)
+            {
+                query = query.Where(x => x.EndDate <= request.EndDateTo.Value);
+            }
 
-                        CreatedAt = x.CreatedAt,
-                        UpdatedAt = x.UpdatedAt,
+            var totalCount = await query.CountAsync();
 
-                        CreatedByUser = x.CreatedBy + " - " + _db.TblUsers
+            var memberships = await query
+                .OrderByDescending(x => x.MembershipId)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(x => new MemberShipModel
+                {
+                    MembershipId = x.MembershipId,
+                    MemberCode = x.Member.MemberCode,
+                    MemberName = x.Member.Name,
+
+                    PlanCode = x.MembershipPlan.PlanCode,
+                    PlanName = x.MembershipPlan.PlanName,
+
+                    StartDate = x.StartDate,
+                    EndDate = x.EndDate,
+                    Status = x.EndDate < today ? "Expired" : x.Status,
+
+                    CreatedByUser = x.CreatedBy + " - " + _db.TblUsers
                         .Where(u => u.UserId == x.CreatedBy)
                         .Select(u => u.UserName)
                         .FirstOrDefault(),
-                        
-                        UpdatedByUser = x.UpdatedBy.HasValue
-                            ? x.UpdatedBy.Value + " - " + _db.TblUsers
+
+                    UpdatedByUser = x.UpdatedBy.HasValue
+                        ? x.UpdatedBy.Value + " - " + _db.TblUsers
                             .Where(u => u.UserId == x.UpdatedBy.Value)
                             .Select(u => u.UserName)
                             .FirstOrDefault()
-                            : null
-                    })
-                    .FirstOrDefaultAsync();
+                        : null
+                })
+                .ToListAsync();
 
-                if (membership == null)
+            _logger.LogInformation("Retrieved {Count} all memberships out of {TotalCount} total.", memberships.Count, totalCount);
+
+            return new Result<MemberShipListResponseModel>
+            {
+                IsSuccess = true,
+                Message = "All memberships retrieved successfully.",
+                Data = new MemberShipListResponseModel
                 {
-                    _logger.LogWarning("Membership with ID: {MembershipId} not found.", membershipId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Membership not found."
-                    };
+                    TotalCount = totalCount,
+                    MemberShips = memberships
                 }
-
-                _logger.LogInformation("Membership with ID: {MembershipId} retrieved successfully.", membershipId);
-                return new Result<MembershipDetailModel>
-                {
-                    IsSuccess = true,
-                    Message = "Membership detail retrieved successfully.",
-                    Data = membership
-                };
-            
-            
+            };
         }
 
-        public async Task <Result<MembershipDetailModel>> Create(int createdByUserId, CreateMemberShipRequestModel request)
+        public async Task<Result<MembershipDetailModel>> GetById(int membershipId)
+        {
+            _logger.LogInformation("Retrieving membership with ID: {MembershipId}", membershipId);
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var membership = await _db.TblMemberships
+                .AsNoTracking()
+                .Where(x => !x.IsDeleted && x.MembershipId == membershipId)
+                .Select(x => new MembershipDetailModel
+                {
+                    MembershipId = x.MembershipId,
+
+                    MemberId = x.MemberId,
+                    MemberCode = x.Member.MemberCode,
+                    MemberName = x.Member.Name,
+
+                    MembershipPlanId = x.MembershipPlanId,
+                    PlanCode = x.MembershipPlan.PlanCode,
+                    PlanName = x.MembershipPlan.PlanName,
+
+                    StartDate = x.StartDate,
+                    EndDate = x.EndDate,
+                    Status = x.EndDate < today ? "Expired" : x.Status,
+
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+
+                    CreatedByUser = x.CreatedBy + " - " + _db.TblUsers
+                        .Where(u => u.UserId == x.CreatedBy)
+                        .Select(u => u.UserName)
+                        .FirstOrDefault(),
+
+                    UpdatedByUser = x.UpdatedBy.HasValue
+                        ? x.UpdatedBy.Value + " - " + _db.TblUsers
+                            .Where(u => u.UserId == x.UpdatedBy.Value)
+                            .Select(u => u.UserName)
+                            .FirstOrDefault()
+                        : null
+                })
+                .FirstOrDefaultAsync();
+
+            #region Check: Membership exists (404)
+            if (membership == null)
+            {
+                _logger.LogWarning("Membership with ID: {MembershipId} not found.", membershipId);
+                return new Result<MembershipDetailModel>
+                {
+                    IsSuccess = false,
+                    Message = "Membership not found."
+                };
+            }
+            #endregion
+
+            _logger.LogInformation("Membership with ID: {MembershipId} retrieved successfully.", membershipId);
+
+            return new Result<MembershipDetailModel>
+            {
+                IsSuccess = true,
+                Message = "Membership detail retrieved successfully.",
+                Data = membership
+            };
+        }
+
+        public async Task<Result<MembershipDetailModel>> Create(int createdByUserId, CreateMemberShipRequestModel request)
         {
             _logger.LogInformation("Creating membership for MemberId: {MemberId}, PlanId: {PlanId}, Amount: {Amount}", request.MemberId, request.MembershipPlanId, request.Amount);
 
+            #region Check: Request is valid (400)
             var validationResult = await _createValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
@@ -276,149 +296,164 @@ namespace GMMS.Domain.Features.MemberShip
                     Message = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage))
                 };
             }
+            #endregion
 
-            
-                var member = await _db.TblMembers
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync (x => !x.IsDeleted && x.MemberId == request.MemberId);
+            #region Check: Member exists
+            var member = await _db.TblMembers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => !x.IsDeleted && x.MemberId == request.MemberId);
 
-                if (member == null)
+            if (member == null)
+            {
+                _logger.LogWarning("Member not found for MemberId: {MemberId}", request.MemberId);
+                return new Result<MembershipDetailModel>
                 {
-                    _logger.LogWarning("Member not found for MemberId: {MemberId}", request.MemberId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Member not found."
-                    };
-                }
-
-                var plan = await _db.TblMembershipPlans
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x =>
-                        !x.IsDeleted &&
-                        x.IsActive &&
-                        x.MembershipPlanId == request.MembershipPlanId);
-
-                if (plan == null)
-                {
-                    _logger.LogWarning("Membership plan not found or inactive for PlanId: {PlanId}", request.MembershipPlanId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Membership plan not found or inactive."
-                    };
-                }
-
-                var exists = await _db.TblMemberships
-                    .AnyAsync(x =>
-                        !x.IsDeleted &&
-                        x.MemberId == request.MemberId &&
-                        x.Status == MembershipPlanStatus.Active.ToString());
-
-                if (exists)
-                {
-                    _logger.LogWarning("Member already has active membership. MemberId: {MemberId}", request.MemberId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Member already has an active membership."
-                    };
-                }
-
-                var paymentMethod = await _db.TblPaymentMethods
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync (x => !x.IsDeleted && 
-                                                x.IsActive && 
-                                                x.PaymentMethodId == 
-                                                request.PaymentMethodId);
-
-                if (paymentMethod == null)
-                {
-                    _logger.LogWarning("Payment method not found or inactive for PaymentMethodId: {PaymentMethodId}", request.PaymentMethodId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Payment method not found or inactive."
-                    };
-                }
-
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-                var newMembership = new TblMembership
-                {
-                    MemberId = request.MemberId,
-                    MembershipPlanId = request.MembershipPlanId,
-                    StartDate = today,
-                    EndDate = today.AddDays(plan.DurationDays),
-                    Status = MembershipPlanStatus.Active.ToString(),
-                    IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = createdByUserId
+                    IsSuccess = false,
+                    Message = "Member not found."
                 };
+            }
+            #endregion
 
-            await using var transaction =
-                await _db.Database.BeginTransactionAsync();
+            #region Check: Membership plan exists and is active
+            var plan = await _db.TblMembershipPlans
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    !x.IsDeleted &&
+                    x.IsActive &&
+                    x.MembershipPlanId == request.MembershipPlanId);
+
+            if (plan == null)
+            {
+                _logger.LogWarning("Membership plan not found or inactive for PlanId: {PlanId}", request.MembershipPlanId);
+                return new Result<MembershipDetailModel>
+                {
+                    IsSuccess = false,
+                    Message = "Membership plan not found or inactive."
+                };
+            }
+            #endregion
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            #region Check: No active membership exists (409)
+            var hasActiveMembership = await _db.TblMemberships
+                .AnyAsync(x =>
+                    !x.IsDeleted &&
+                    x.MemberId == request.MemberId &&
+                    x.EndDate >= today);
+
+            if (hasActiveMembership)
+            {
+                _logger.LogWarning("Member already has active membership. MemberId: {MemberId}", request.MemberId);
+                return new Result<MembershipDetailModel>
+                {
+                    IsSuccess = false,
+                    Message = "Member already has an active membership."
+                };
+            }
+            #endregion
+
+            #region Check: Payment method exists and is active
+            var paymentMethod = await _db.TblPaymentMethods
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => !x.IsDeleted &&
+                                          x.IsActive &&
+                                          x.PaymentMethodId ==
+                                          request.PaymentMethodId);
+
+            if (paymentMethod == null)
+            {
+                _logger.LogWarning("Payment method not found or inactive for PaymentMethodId: {PaymentMethodId}", request.PaymentMethodId);
+                return new Result<MembershipDetailModel>
+                {
+                    IsSuccess = false,
+                    Message = "Payment method not found or inactive."
+                };
+            }
+            #endregion
+
+            if (plan.Price <= 0)
+            {
+                _logger.LogWarning("Membership plan price is invalid (<= 0). PlanId: {PlanId}", request.MembershipPlanId);
+                return new Result<MembershipDetailModel>
+                {
+                    IsSuccess = false,
+                    Message = "Membership plan price is invalid."
+                };
+            }
+
+            var newMembership = new TblMembership
+            {
+                MemberId = request.MemberId,
+                MembershipPlanId = request.MembershipPlanId,
+                StartDate = today,
+                EndDate = today.AddDays(plan.DurationDays),
+                Status = MembershipPlanStatus.Active.ToString(),
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = createdByUserId
+            };
+
+            #region Handle: Save membership and payment (transaction)
+            await using var transaction = await _db.Database.BeginTransactionAsync();
 
             try
             {
-                await _db.TblMemberships
-                    .AddAsync(newMembership);
-               await _db.SaveChangesAsync();
+                await _db.TblMemberships.AddAsync(newMembership);
+                await _db.SaveChangesAsync();
 
                 var newPayment = new TblPayment
                 {
                     MembershipId = newMembership.MembershipId,
                     PaymentMethodId = request.PaymentMethodId,
-                    Amount = request.Amount,
+                    Amount = plan.Price,
                     Sspath = request.Sspath,
                     Status = PaymentStatus.Pending.ToString(),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = createdByUserId
                 };
 
-                await _db.TblPayments
-                    .AddAsync(newPayment);
+                await _db.TblPayments.AddAsync(newPayment);
                 await _db.SaveChangesAsync();
 
                 await transaction.CommitAsync();
             }
             catch
             {
-               await transaction.RollbackAsync();
+                await transaction.RollbackAsync();
                 throw;
             }
-                
+            #endregion
 
-                _logger.LogInformation("Membership created successfully with MembershipId: {MembershipId} for MemberId: {MemberId}", newMembership.MembershipId, request.MemberId);
+            _logger.LogInformation("Membership created successfully with MembershipId: {MembershipId} for MemberId: {MemberId}", newMembership.MembershipId, request.MemberId);
 
-                return new Result<MembershipDetailModel>
+            return new Result<MembershipDetailModel>
+            {
+                IsSuccess = true,
+                Message = "Membership and payment created successfully.",
+                Data = new MembershipDetailModel
                 {
-                    IsSuccess = true,
-                    Message = "Membership and payment created successfully.",
-                    Data = new MembershipDetailModel
-                    {
-                        MembershipId = newMembership.MembershipId,
-                        MemberId = member.MemberId,
-                        MemberCode = member.MemberCode,
-                        MemberName = member.Name,
-                        MembershipPlanId = plan.MembershipPlanId,
-                        PlanCode = plan.PlanCode,
-                        PlanName = plan.PlanName,
-                        StartDate = newMembership.StartDate,
-                        EndDate = newMembership.EndDate,
-                        Status = newMembership.Status,
-                        CreatedAt = newMembership.CreatedAt,
-                        CreatedByUser = newMembership.CreatedBy + " - " + _db.TblUsers.Where(u => u.UserId == newMembership.CreatedBy).Select(u => u.UserName).FirstOrDefault()
-                    }
-                };
-            
-          
+                    MembershipId = newMembership.MembershipId,
+                    MemberId = member.MemberId,
+                    MemberCode = member.MemberCode,
+                    MemberName = member.Name,
+                    MembershipPlanId = plan.MembershipPlanId,
+                    PlanCode = plan.PlanCode,
+                    PlanName = plan.PlanName,
+                    StartDate = newMembership.StartDate,
+                    EndDate = newMembership.EndDate,
+                    Status = newMembership.EndDate < today ? "Expired" : newMembership.Status,
+                    CreatedAt = newMembership.CreatedAt,
+                    CreatedByUser = newMembership.CreatedBy + " - " + _db.TblUsers.Where(u => u.UserId == newMembership.CreatedBy).Select(u => u.UserName).FirstOrDefault()
+                }
+            };
         }
 
-        public async Task <Result<MembershipDetailModel>> Update(int updatedByUserId, UpdateMembershipRequestModel request)
+        public async Task<Result<MembershipDetailModel>> Update(int updatedByUserId, UpdateMembershipRequestModel request)
         {
             _logger.LogInformation("Updating membership with ID: {MembershipId}, New PlanId: {PlanId}", request.MembershipId, request.MembershipPlanId);
 
+            #region Check: Request is valid (400)
             var validationResult = await _updateValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
@@ -429,136 +464,144 @@ namespace GMMS.Domain.Features.MemberShip
                     Message = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage))
                 };
             }
+            #endregion
 
-           
-                var membership = await _db.TblMemberships
+            #region Check: Membership exists (404)
+            var membership = await _db.TblMemberships
+                .Include(x => x.Member)
+                .FirstOrDefaultAsync(x => !x.IsDeleted && x.MembershipId == request.MembershipId);
 
-                    .Include(x => x.Member)
-                    .FirstOrDefaultAsync(x => !x.IsDeleted && x.MembershipId == request.MembershipId);
-
-                if (membership == null)
-                {
-                    _logger.LogWarning("Membership not found for MembershipId: {MembershipId}", request.MembershipId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Membership not found."
-                    };
-                }
-
-                var plan = await _db.TblMembershipPlans
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x =>
-                        !x.IsDeleted &&
-                        x.IsActive &&
-                        x.MembershipPlanId == request.MembershipPlanId);
-
-                if (plan == null)
-                {
-                    _logger.LogWarning("Membership plan not found or inactive for PlanId: {PlanId}", request.MembershipPlanId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Membership plan not found or inactive."
-                    };
-                }
-
-                var exits = await _db.TblMemberships
-                    .AnyAsync(x =>
-                        !x.IsDeleted &&
-                        x.MemberId == membership.MemberId &&
-                        x.MembershipId != membership.MembershipId &&
-                        x.Status == MembershipPlanStatus.Active.ToString());
-
-                if (exits)
-                {
-                    _logger.LogWarning("Member already has another active membership. MemberId: {MemberId}", membership.MemberId);
-                    return new Result<MembershipDetailModel>
-                    {
-                        IsSuccess = false,
-                        Message = "Member already has an active membership."
-                    };
-                }
-
-                membership.MembershipPlanId = request.MembershipPlanId;
-                membership.EndDate = membership.StartDate.AddDays(plan.DurationDays);
-                membership.UpdatedAt = DateTime.UtcNow;
-                membership.UpdatedBy = updatedByUserId;
-
-               await  _db.SaveChangesAsync();
-
-                _logger.LogInformation("Membership with ID: {MembershipId} updated successfully.", request.MembershipId);
-
+            if (membership == null)
+            {
+                _logger.LogWarning("Membership not found for MembershipId: {MembershipId}", request.MembershipId);
                 return new Result<MembershipDetailModel>
                 {
-                    IsSuccess = true,
-                    Message = "Membership updated successfully.",
-                    Data = new MembershipDetailModel
-                    {
-                        MembershipId = membership.MembershipId,
+                    IsSuccess = false,
+                    Message = "Membership not found."
+                };
+            }
+            #endregion
 
-                        MemberId = membership.MemberId,
-                        MemberCode = membership.Member.MemberCode,
-                        MemberName = membership.Member.Name,
+            #region Check: Membership plan exists and is active
+            var plan = await _db.TblMembershipPlans
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    !x.IsDeleted &&
+                    x.IsActive &&
+                    x.MembershipPlanId == request.MembershipPlanId);
 
-                        MembershipPlanId = plan.MembershipPlanId,
-                        PlanCode = plan.PlanCode,
-                        PlanName = plan.PlanName,
+            if (plan == null)
+            {
+                _logger.LogWarning("Membership plan not found or inactive for PlanId: {PlanId}", request.MembershipPlanId);
+                return new Result<MembershipDetailModel>
+                {
+                    IsSuccess = false,
+                    Message = "Membership plan not found or inactive."
+                };
+            }
+            #endregion
 
-                        StartDate = membership.StartDate,
-                        EndDate = membership.EndDate,
-                        Status = membership.Status,
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-                        CreatedAt = membership.CreatedAt,
+            #region Check: No other active membership exists (409)
+            var hasOtherActiveMembership = await _db.TblMemberships
+                .AnyAsync(x =>
+                    !x.IsDeleted &&
+                    x.MemberId == membership.MemberId &&
+                    x.MembershipId != membership.MembershipId &&
+                    x.EndDate >= today);
 
-                        CreatedByUser = membership.CreatedBy + " - " + _db.TblUsers
+            if (hasOtherActiveMembership)
+            {
+                _logger.LogWarning("Member already has another active membership. MemberId: {MemberId}", membership.MemberId);
+                return new Result<MembershipDetailModel>
+                {
+                    IsSuccess = false,
+                    Message = "Member already has an active membership."
+                };
+            }
+            #endregion
+
+            membership.MembershipPlanId = request.MembershipPlanId;
+            membership.EndDate = membership.StartDate.AddDays(plan.DurationDays);
+            membership.UpdatedAt = DateTime.UtcNow;
+            membership.UpdatedBy = updatedByUserId;
+
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Membership with ID: {MembershipId} updated successfully.", request.MembershipId);
+
+            return new Result<MembershipDetailModel>
+            {
+                IsSuccess = true,
+                Message = "Membership updated successfully.",
+                Data = new MembershipDetailModel
+                {
+                    MembershipId = membership.MembershipId,
+
+                    MemberId = membership.MemberId,
+                    MemberCode = membership.Member.MemberCode,
+                    MemberName = membership.Member.Name,
+
+                    MembershipPlanId = plan.MembershipPlanId,
+                    PlanCode = plan.PlanCode,
+                    PlanName = plan.PlanName,
+
+                    StartDate = membership.StartDate,
+                    EndDate = membership.EndDate,
+                    Status = membership.EndDate < today ? "Expired" : membership.Status,
+
+                    CreatedAt = membership.CreatedAt,
+
+                    CreatedByUser = membership.CreatedBy + " - " + _db.TblUsers
                         .Where(u => u.UserId == membership.CreatedBy)
                         .Select(u => u.UserName)
                         .FirstOrDefault(),
 
-                        UpdatedAt = membership.UpdatedAt,
+                    UpdatedAt = membership.UpdatedAt,
 
-                        UpdatedByUser = membership.UpdatedBy.HasValue
-                            ? membership.UpdatedBy.Value + " - " + _db.TblUsers
+                    UpdatedByUser = membership.UpdatedBy.HasValue
+                        ? membership.UpdatedBy.Value + " - " + _db.TblUsers
                             .Where(u => u.UserId == membership.UpdatedBy.Value)
                             .Select(u => u.UserName)
                             .FirstOrDefault()
-                            : null
-                    }
-                };
+                        : null
+                }
+            };
         }
+
         public async Task<Result<bool>> Delete(int membershipId, int updatedByUserId)
         {
             _logger.LogInformation("Deleting membership with ID: {MembershipId}", membershipId);
 
-                var membership = await _db.TblMemberships
-                    .FirstOrDefaultAsync(x => !x.IsDeleted && x.MembershipId == membershipId);
+            #region Check: Membership exists (404)
+            var membership = await _db.TblMemberships
+                .FirstOrDefaultAsync(x => !x.IsDeleted && x.MembershipId == membershipId);
 
-                if (membership == null)
-                {
-                    _logger.LogWarning("Membership with ID: {MembershipId} not found.", membershipId);
-                    return new Result<bool>
-                    {
-                        IsSuccess = false,
-                        Message = "Membership not found."
-                    };
-                }
-
-                membership.IsDeleted = true;
-                membership.UpdatedAt = DateTime.UtcNow;
-                membership.UpdatedBy = updatedByUserId;
-                await _db.SaveChangesAsync();
-
-                _logger.LogInformation("Membership with ID: {MembershipId} deleted successfully.", membershipId);
-
+            if (membership == null)
+            {
+                _logger.LogWarning("Membership with ID: {MembershipId} not found.", membershipId);
                 return new Result<bool>
                 {
-                    IsSuccess = true,
-                    Message = "Membership deleted successfully.",
-                    Data = true
+                    IsSuccess = false,
+                    Message = "Membership not found."
                 };
+            }
+            #endregion
+
+            membership.IsDeleted = true;
+            membership.UpdatedAt = DateTime.UtcNow;
+            membership.UpdatedBy = updatedByUserId;
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Membership with ID: {MembershipId} deleted successfully.", membershipId);
+
+            return new Result<bool>
+            {
+                IsSuccess = true,
+                Message = "Membership deleted successfully.",
+                Data = true
+            };
         }
-            
-            
     }
 }

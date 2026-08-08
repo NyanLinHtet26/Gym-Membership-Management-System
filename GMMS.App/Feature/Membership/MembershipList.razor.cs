@@ -148,5 +148,53 @@ namespace GMMS.App.Feature.Membership
                 _ => Color.Default
             };
         }
+
+        private async Task RetryAsync() => await LoadPage(pageNumber);
+
+        private int DaysRemaining(MemberShipModel membership)
+        {
+            return (membership.EndDate.ToDateTime(TimeOnly.MinValue) - DateTime.Today).Days;
+        }
+
+        private bool IsExpiringSoon(MemberShipModel membership)
+        {
+            var days = DaysRemaining(membership);
+            return membership.Status != "Expired" && days is >= 0 and <= 7;
+        }
+
+        private string? GetEndNote(MemberShipModel membership)
+        {
+            var days = DaysRemaining(membership);
+            if (days < 0)
+            {
+                return $"{(membership.Status == "Expired" ? "Expired" : "Overdue")} {-days}d ago";
+            }
+            if (days <= 7)
+            {
+                return days == 0 ? "Expires today" : $"{days}d left";
+            }
+            return null;
+        }
+
+        private string GetEndNoteClass(MemberShipModel membership)
+        {
+            if (IsExpiringSoon(membership)) return "gmm-ms__soon";
+            if (DaysRemaining(membership) < 0) return "gmm-ms__overdue";
+            return "gmm-ms__remaining";
+        }
+
+        private string GetEndIcon(MemberShipModel membership)
+        {
+            if (IsExpiringSoon(membership)) return Icons.Material.Filled.WarningAmber;
+            if (DaysRemaining(membership) < 0) return Icons.Material.Filled.Error;
+            return Icons.Material.Filled.EventAvailable;
+        }
+
+        private string GetEndIconClass(MemberShipModel membership)
+        {
+            if (IsExpiringSoon(membership)) return "gmm-ms__icon-warn";
+            if (DaysRemaining(membership) < 0) return "gmm-ms__icon-error";
+            return "gmm-ms__icon-ok";
+        }
     }
 }

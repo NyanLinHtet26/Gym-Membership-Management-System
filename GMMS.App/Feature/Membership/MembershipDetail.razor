@@ -58,17 +58,17 @@
 
             @if (AuthTokenStore.CurrentUser?.Role == "Owner")
             {
-                <MudTextField Value="@(string.IsNullOrEmpty(detail.CreatedByUser) ? "—" : detail.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
+                <MudTextField Value="@(string.IsNullOrEmpty(detail.CreatedByUser) ? "-" : detail.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
                               ReadOnly="true" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
 
                 @if (detail.UpdatedAt is not null || !string.IsNullOrEmpty(detail.UpdatedByUser))
                 {
-                    <MudTextField Value="@(detail.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")" Label="Updated At" Variant="Variant.Outlined"
+                    <MudTextField Value="@(detail.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")" Label="Updated At" Variant="Variant.Outlined"
                                   ReadOnly="true" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 
-                    <MudTextField Value="@(string.IsNullOrEmpty(detail.UpdatedByUser) ? "—" : detail.UpdatedByUser)" Label="Updated By" Variant="Variant.Outlined"
+                    <MudTextField Value="@(string.IsNullOrEmpty(detail.UpdatedByUser) ? "-" : detail.UpdatedByUser)" Label="Updated By" Variant="Variant.Outlined"
                                   ReadOnly="true" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
                 }

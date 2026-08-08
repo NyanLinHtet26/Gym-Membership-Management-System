@@ -39,10 +39,17 @@ namespace GMMS.App.Feature.Membership
             set => request.MemberId = int.TryParse(value, out var id) ? id : 0;
         }
 
+        private MemberShipPlanModel? GetSelectedPlan()
+            => plans.FirstOrDefault(p => p.MemberShipPlanId == request.MembershipPlanId);
+
         private string _planStr
         {
             get => request.MembershipPlanId > 0 ? request.MembershipPlanId.ToString() : "";
-            set => request.MembershipPlanId = int.TryParse(value, out var id) ? id : 0;
+            set
+            {
+                request.MembershipPlanId = int.TryParse(value, out var id) ? id : 0;
+                request.Amount = GetSelectedPlan()?.Price ?? 0;
+            }
         }
 
         private string _paymentMethodStr

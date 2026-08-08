@@ -52,5 +52,8 @@
         public const string ResetUserPassword = "api/User/reset-password";
         public const string DeleteUser = "api/User/{id}";
         #endregion
+        #region DashBoard
+        public const string Dashboard = "api/DashBoard";
+        #endregion
     }
 }

@@ -20,7 +20,11 @@ namespace GMMS.App.Feature.Member
         [Inject]
         private ISnackbar Snackbar { get; set; } = null!;
 
+        [Inject]
+        private AuthTokenStore AuthTokenStore { get; set; } = null!;
+
         private UpdateMemberRequestModel request = new();
+        private MemberModel? member;
         private bool isLoading = true;
         private bool isSaving;
         private bool loadFailed;
@@ -28,11 +32,21 @@ namespace GMMS.App.Feature.Member
 
         protected override async Task OnInitializedAsync()
         {
+            await LoadAsync();
+        }
+
+        private async Task LoadAsync()
+        {
+            isLoading = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var result = await ApiService.GetMemberDetailsAsync<Result<MemberModel>>(MemberId);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
+                    member = result.Data;
                     request.MemberId = result.Data.MemberId;
                     request.MemberCode = result.Data.MemberCode;
                     request.Name = result.Data.Name;
@@ -53,6 +67,8 @@ namespace GMMS.App.Feature.Member
                 isLoading = false;
             }
         }
+
+        private async Task RetryAsync() => await LoadAsync();
 
         private void ConvertMemberCodeUpper()
         {

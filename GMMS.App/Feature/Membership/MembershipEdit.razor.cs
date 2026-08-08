@@ -29,22 +29,25 @@ namespace GMMS.App.Feature.Membership
         private List<MemberShipPlanModel> plans = new();
         private bool isLoadingData = true;
         private bool isSaving;
+        private bool loadFailed;
         private string? errorMessage;
 
         private DateOnly? newEndDate;
 
-        private string _planStr
-        {
-            get => request.MembershipPlanId > 0 ? request.MembershipPlanId.ToString() : "";
-            set
-            {
-                request.MembershipPlanId = int.TryParse(value, out var id) ? id : 0;
-                RecalcEndDate();
-            }
-        }
+        private MemberShipPlanModel? SelectedPlan =>
+            plans.FirstOrDefault(p => p.MemberShipPlanId == request.MembershipPlanId);
 
         protected override async Task OnInitializedAsync()
         {
+            await LoadAsync();
+        }
+
+        private async Task LoadAsync()
+        {
+            isLoadingData = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var result = await ApiService.GetMembershipDetailsAsync<Result<MembershipDetailModel>>(MembershipId);
@@ -59,12 +62,13 @@ namespace GMMS.App.Feature.Membership
                 else
                 {
                     errorMessage = result?.Message ?? "Membership not found.";
+                    loadFailed = true;
                 }
 
                 var planResult = await ApiService.GetMembershipPlanListAsync<Result<MemberShipPlanListResponseModel>>(1, 100);
                 if (planResult?.IsSuccess == true && planResult.Data is not null)
                     plans = planResult.Data.MemberShipPlans ?? new();
-                else if (string.IsNullOrEmpty(errorMessage))
+                else if (!loadFailed)
                     errorMessage = planResult?.Message ?? "Failed to load membership plans.";
 
                 if (detail is not null && plans is not null)
@@ -73,12 +77,21 @@ namespace GMMS.App.Feature.Membership
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {
                 isLoadingData = false;
                 StateHasChanged();
             }
+        }
+
+        private async Task RetryAsync() => await LoadAsync();
+
+        private void OnPlanValueChanged(int membershipPlanId)
+        {
+            request.MembershipPlanId = membershipPlanId;
+            RecalcEndDate();
         }
 
         private void RecalcEndDate()
@@ -131,6 +144,17 @@ namespace GMMS.App.Feature.Membership
             {
                 isSaving = false;
             }
+        }
+
+        private Color GetStatusColor(string status)
+        {
+            return status switch
+            {
+                "Active" => Color.Success,
+                "Pending" => Color.Warning,
+                "Expired" => Color.Error,
+                _ => Color.Default
+            };
         }
     }
 }
