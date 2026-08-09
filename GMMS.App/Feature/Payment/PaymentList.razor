@@ -34,12 +34,18 @@
                       Clearable="true"
                       Immediate="true"
                       Class="gmm-field-search" />
-        <MudDateRangePicker @bind-DateRange="SelectedDateRange"
-                            Label="Created between"
-                            Variant="Variant.Outlined"
-                            Placeholder="Start - End"
-                            Clearable="true"
-                            Class="gmm-pay__date-range" />
+        <MudDatePicker @bind-Date="_fromDatePicker"
+                       Label="From"
+                       Variant="Variant.Outlined"
+                       Clearable="true"
+                       InputIcon="@Icons.Material.Filled.Event"
+                       Class="gmm-pay__date-picker" />
+        <MudDatePicker @bind-Date="_toDatePicker"
+                       Label="To"
+                       Variant="Variant.Outlined"
+                       Clearable="true"
+                       InputIcon="@Icons.Material.Filled.Event"
+                       Class="gmm-pay__date-picker" />
     </div>
 
     @if (isLoading)
@@ -143,11 +149,11 @@
             <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Large" Class="mud-text-secondary mb-3" />
             <MudText Typo="Typo.body1" Class="mb-1"><strong>No payments found</strong></MudText>
             <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="text-align: center; max-width: 420px;">
-                @(string.IsNullOrWhiteSpace(_searchTerm) && SelectedDateRange is null
+                @(string.IsNullOrWhiteSpace(_searchTerm) && _fromDate is null && _toDate is null
                     ? "No payments recorded yet. Record the first one to get started."
                     : "Nothing matches your current search or date range. Try a different term or dates.")
             </MudText>
-            @if (string.IsNullOrWhiteSpace(_searchTerm) && SelectedDateRange is null && AuthTokenStore.CurrentUser?.Role == "Admin")
+            @if (string.IsNullOrWhiteSpace(_searchTerm) && _fromDate is null && _toDate is null && AuthTokenStore.CurrentUser?.Role == "Admin")
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-pay__add mt-4"
                            OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.AddCard">
@@ -225,10 +231,10 @@
         margin: 8px 0 16px;
     }
 
-    .gmm-pay__date-range {
-        flex: 0 1 300px !important;
-        min-width: 240px !important;
-        max-width: 320px !important;
+    .gmm-pay__date-picker {
+        flex: 0 1 180px !important;
+        min-width: 150px !important;
+        max-width: 190px !important;
         width: auto !important;
     }
 
