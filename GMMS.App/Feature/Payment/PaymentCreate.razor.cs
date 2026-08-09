@@ -24,45 +24,65 @@ namespace GMMS.App.Feature.Payment
         private List<PaymentMethodModel> paymentMethods = new();
         private bool isLoadingData = true;
         private bool isSaving;
+        private bool loadFailed;
         private string? errorMessage;
 
-        private string _membershipStr
-        {
-            get => request.MembershipId > 0 ? request.MembershipId.ToString() : "";
-            set => request.MembershipId = int.TryParse(value, out var id) ? id : 0;
-        }
-
-        private string _paymentMethodStr
-        {
-            get => request.PaymentMethodId > 0 ? request.PaymentMethodId.ToString() : "";
-            set => request.PaymentMethodId = int.TryParse(value, out var id) ? id : 0;
-        }
+        private MemberShipModel? SelectedMembership =>
+            memberships.FirstOrDefault(m => m.MembershipId == request.MembershipId);
 
         protected override async Task OnInitializedAsync()
         {
+            await LoadDataAsync();
+        }
+
+        private async Task LoadDataAsync()
+        {
+            isLoadingData = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var membershipResult = await ApiService.GetAllMembershipsAsync<Result<MemberShipListResponseModel>>(1, 100);
                 if (membershipResult?.IsSuccess == true && membershipResult.Data is not null)
                     memberships = membershipResult.Data.MemberShips ?? new();
                 else
+                {
                     errorMessage = membershipResult?.Message ?? "Failed to load memberships.";
+                    loadFailed = true;
+                }
 
                 var methodResult = await ApiService.GetPaymentMethodListAsync<Result<PaymentMethodListResponseModel>>(1, 100);
                 if (methodResult?.IsSuccess == true && methodResult.Data is not null)
                     paymentMethods = (methodResult.Data.PaymentMethods ?? new()).Where(p => p.IsActive).ToList();
                 else if (string.IsNullOrEmpty(errorMessage))
+                {
                     errorMessage = methodResult?.Message ?? "Failed to load payment methods.";
+                    loadFailed = true;
+                }
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {
                 isLoadingData = false;
-                StateHasChanged();
             }
+        }
+
+        private async Task RetryAsync() => await LoadDataAsync();
+
+        private Color GetStatusColor(string status)
+        {
+            return status switch
+            {
+                "Active" => Color.Success,
+                "Pending" => Color.Warning,
+                "Expired" => Color.Error,
+                _ => Color.Default
+            };
         }
 
         private void Cancel()

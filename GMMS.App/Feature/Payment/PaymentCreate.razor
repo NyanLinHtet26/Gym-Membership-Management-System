@@ -2,8 +2,8 @@
 
 <MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Payment" Class="mr-3" Color="Color.Primary" /> Create Payment
+        <MudText Typo="Typo.h6" Class="gmm-pay__create-title">
+            <MudIcon Icon="@Icons.Material.Filled.AddCard" Class="mr-3" Color="Color.Primary" /> Create Payment
         </MudText>
     </TitleContent>
 
@@ -15,49 +15,91 @@
 
         @if (isLoadingData)
         {
-            <div class="d-flex justify-center pa-6">
-                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <div class="d-flex flex-column gmm-pay__create-skeleton">
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+            </div>
+        }
+        else if (loadFailed)
+        {
+            <div class="d-flex flex-column align-center pa-4">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3" Style="text-align: center;">
+                    We couldn't load the data needed to create a payment. Check your connection, then try again.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RetryAsync"
+                           StartIcon="@Icons.Material.Filled.Refresh">
+                    Try Again
+                </MudButton>
             </div>
         }
         else
         {
-            <div class="mb-4">
-                <MudText Typo="Typo.body2" Class="mb-1"><strong>Membership</strong> <span class="text-danger">*</span></MudText>
-                <select class="form-select" @bind-value="_membershipStr" @bind-value:event="onchange">
-                    <option value="">-- Select Membership --</option>
-                    @if (memberships is not null)
-                    {
-                        @foreach (var m in memberships)
-                        {
-                            <option value="@m.MembershipId">@m.MemberName - @m.PlanName (@m.StartDate to @m.EndDate)</option>
-                        }
-                    }
-                </select>
-            </div>
+            <MudSelect T="int" @bind-Value="request.MembershipId"
+                       Label="Membership"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       RequiredError="Please select a membership."
+                       Adornment="Adornment.Start"
+                       AdornmentIcon="@Icons.Material.Filled.CardMembership"
+                       AnchorOrigin="Origin.BottomCenter"
+                       Class="gmm-field-constrained"
+                       HelperText="The membership this payment belongs to.">
+                @foreach (var m in memberships)
+                {
+                    <MudSelectItem Value="@(m.MembershipId)">@m.MemberName - @m.PlanName (@m.StartDate.ToString("d") to @m.EndDate.ToString("d"))</MudSelectItem>
+                }
+            </MudSelect>
 
-            <div class="mb-4">
-                <MudText Typo="Typo.body2" Class="mb-1"><strong>Payment Method</strong> <span class="text-danger">*</span></MudText>
-                <select class="form-select" @bind-value="_paymentMethodStr" @bind-value:event="onchange">
-                    <option value="">-- Select Payment Method --</option>
-                    @if (paymentMethods is not null)
-                    {
-                        @foreach (var pm in paymentMethods)
-                        {
-                            <option value="@pm.PaymentMethodId">@pm.Name</option>
-                        }
-                    }
-                </select>
-            </div>
+            @if (SelectedMembership is { } selected)
+            {
+                <div class="gmm-pay__create-membership mt-3">
+                    <MudText Typo="Typo.subtitle2" Class="gmm-pay__create-label">Selected Membership</MudText>
+                    <div class="d-flex flex-wrap align-center" style="gap: 10px;">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="gmm-pay__create-code">@selected.MemberCode</MudChip>
+                        <MudText Typo="Typo.body2" Class="gmm-pay__create-member">@selected.MemberName</MudText>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                                 Color="@GetStatusColor(selected.Status)" Class="gmm-pay__create-chip">
+                            @selected.Status
+                        </MudChip>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">
+                        @selected.PlanName (@selected.PlanCode)
+                    </MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        @selected.StartDate.ToString("yyyy-MM-dd") &rarr; @selected.EndDate.ToString("yyyy-MM-dd")
+                    </MudText>
+                </div>
+            }
+
+            <MudSelect T="int" @bind-Value="request.PaymentMethodId"
+                       Label="Payment Method"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       RequiredError="Please select a payment method."
+                       Adornment="Adornment.Start"
+                       AdornmentIcon="@Icons.Material.Filled.Wallet"
+                       AnchorOrigin="Origin.BottomCenter"
+                       Class="gmm-field-constrained mt-4"
+                       HelperText="How the member paid.">
+                @foreach (var pm in paymentMethods)
+                {
+                    <MudSelectItem Value="@(pm.PaymentMethodId)">@pm.Name</MudSelectItem>
+                }
+            </MudSelect>
 
             <MudNumericField @bind-Value="request.Amount" T="decimal" Label="Amount" Variant="Variant.Outlined"
                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney"
-                             Min="0.01m" Step="0.01m" Required="true" RequiredError="Amount is required." Class="mb-4" />
+                             Min="0.01m" Step="0.01m" Required="true" RequiredError="Amount is required."
+                             Class="gmm-field-constrained mt-4" />
 
             <MudTextField @bind-Value="request.Sspath"
                           Label="Receipt Path (optional)"
                           Variant="Variant.Outlined"
                           MaxLength="500"
-                          Class="mb-2"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Link"
+                          Class="gmm-field-constrained mt-4 mb-2"
                           HelperText="Path or URL to the payment receipt (max 500 chars)" />
         }
     </DialogContent>
@@ -66,9 +108,9 @@
         <MudButton OnClick="Cancel" Variant="Variant.Text" Class="mr-2">Cancel</MudButton>
         <MudButton OnClick="Save"
                    Variant="Variant.Filled"
-                   Color="Color.Primary"
+                   Class="gmm-pay__create-save"
                    StartIcon="@Icons.Material.Filled.Save"
-                   Disabled="@isSaving">
+                   Disabled="@(isSaving || loadFailed)">
             @if (isSaving)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -77,3 +119,58 @@
         </MudButton>
     </DialogActions>
 </MudDialog>
+
+<style>
+    .gmm-pay__create-title {
+        font-weight: 700 !important;
+    }
+
+    .gmm-pay__create-label {
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .gmm-pay__create-skeleton {
+        gap: 16px;
+    }
+
+    .gmm-pay__create-membership {
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+        background-color: var(--mud-palette-surface);
+    }
+
+    .gmm-pay__create-member {
+        font-weight: 600;
+    }
+
+    .gmm-pay__create-code.mud-chip {
+        background-color: var(--mud-palette-background-grey);
+        color: var(--mud-palette-text-primary);
+        border-left: 3px solid #60A5FA;
+        border-radius: 6px;
+        font-family: 'Cascadia Mono', 'Consolas', monospace;
+        letter-spacing: .3px;
+    }
+
+    .gmm-pay__create-chip {
+        border-radius: 6px;
+    }
+
+    .gmm-pay__create-save {
+        background-color: #10B981;
+        border-radius: 8px;
+    }
+
+    .gmm-pay__create-save:hover {
+        filter: brightness(1.15);
+    }
+
+    .gmm-field-constrained {
+        flex: 0 1 320px !important;
+        min-width: 200px !important;
+        max-width: 320px !important;
+        width: auto !important;
+    }
+</style>
