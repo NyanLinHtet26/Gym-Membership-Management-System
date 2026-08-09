@@ -18,7 +18,7 @@ namespace GMMS.Domain.Enums
     {
         none,
         Pending,
-        Completed,
+        Paid,
         Failed
     }
 

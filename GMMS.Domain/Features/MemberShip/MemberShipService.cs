@@ -412,7 +412,7 @@ namespace GMMS.Domain.Features.MemberShip
                     PaymentMethodId = request.PaymentMethodId,
                     Amount = plan.Price,
                     Sspath = request.Sspath,
-                    Status = PaymentStatus.Completed.ToString(),
+                    Status = PaymentStatus.Paid.ToString(),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = createdByUserId
                 };

@@ -201,7 +201,7 @@ namespace GMMS.Domain.Features.Payment
                     PaymentMethodId = request.PaymentMethodId,
                     Amount = request.Amount,
                     Sspath = request.Sspath,
-                    Status = PaymentStatus.Completed.ToString(),
+                    Status = PaymentStatus.Paid.ToString(),
                     IsDeleted = false,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = createdByUserId

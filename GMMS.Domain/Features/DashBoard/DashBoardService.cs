@@ -22,7 +22,7 @@ namespace GMMS.Domain.Features.DashBoard
             var today = DateTime.Today;
             var firstDayOfMonth = new DateTime(today.Year, today.Month, 1);
             var chartStart = firstDayOfMonth.AddMonths(-(ChartMonthCount - 1));
-            var completedStatus = PaymentStatus.Completed.ToString();
+            var completedStatus = PaymentStatus.Paid.ToString();
 
             DashboardResponseModel model = new();
 
