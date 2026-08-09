@@ -12,6 +12,12 @@ namespace GMMS.App.Feature.DashBoard
         [Inject]
         private ApiService ApiService { get; set; } = null!;
 
+        [Inject]
+        private NavigationManager Navigation { get; set; } = null!;
+
+        [Inject]
+        private AuthTokenStore AuthTokenStore { get; set; } = null!;
+
         private DashboardResponseModel? _model;
         private bool _isLoading = true;
         private string? _errorMessage;
@@ -29,6 +35,12 @@ namespace GMMS.App.Feature.DashBoard
 
         protected override async Task OnInitializedAsync()
         {
+            if (AuthTokenStore.CurrentUser?.Role != AuthTokenStore.RoleOwner)
+            {
+                Navigation.NavigateTo("/member-list");
+                return;
+            }
+
             await LoadAsync();
         }
 

@@ -24,6 +24,9 @@ namespace GMMS.App.Feature.Membership
         [Inject]
         private ISnackbar Snackbar { get; set; } = null!;
 
+        [Inject]
+        private AuthTokenStore AuthTokenStore { get; set; } = null!;
+
         private UpdateMembershipRequestModel request = new();
         private MembershipDetailModel? detail;
         private List<MemberShipPlanModel> plans = new();

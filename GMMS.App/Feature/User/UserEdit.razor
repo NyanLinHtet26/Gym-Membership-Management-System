@@ -1,9 +1,9 @@
 @using MudBlazor
 
-<MudDialog>
+<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> Edit User
+        <MudText Typo="Typo.h6" Class="gmm-user__edit-title">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" Color="Color.Primary" /> Edit User
         </MudText>
     </TitleContent>
 
@@ -15,11 +15,25 @@
 
         @if (isLoading)
         {
-            <div class="d-flex justify-center pa-6">
-                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <div class="d-flex flex-column gmm-user__edit-skeleton">
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
             </div>
         }
-        else
+        else if (loadFailed)
+        {
+            <div class="d-flex flex-column align-center pa-4">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3" Style="text-align: center;">
+                    We couldn't load this user. Check your connection, then try again.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RetryAsync"
+                           StartIcon="@Icons.Material.Filled.Refresh">
+                    Try Again
+                </MudButton>
+            </div>
+        }
+        else if (user is not null)
         {
             <MudTextField @bind-Value="request.UserName"
                           Label="Username"
@@ -27,31 +41,62 @@
                           Required="true"
                           RequiredError="Username is required."
                           MaxLength="100"
-                          Class="mb-3"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Badge"
+                          Class="mb-3 gmm-field-constrained"
                           HelperText="3-100 characters" />
 
-            <MudSelect @bind-Value="request.Role"
+            <MudSelect T="string" @bind-Value="request.Role"
                        Label="Role"
                        Variant="Variant.Outlined"
                        Required="true"
                        RequiredError="Role is required."
-                       Class="mb-3">
-                <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
-                <MudSelectItem Value="@("Owner")">Owner</MudSelectItem>
+                       Adornment="Adornment.Start"
+                       AdornmentIcon="@Icons.Material.Filled.AdminPanelSettings"
+                       Class="mb-3 gmm-field-constrained">
+                <MudSelectItem T="string" Value="@("Admin")">Admin</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Owner")">Owner</MudSelectItem>
             </MudSelect>
 
             <MudCheckBox T="bool" @bind-Checked="request.IsActive"
                          Label="Active"
                          Class="mb-3" />
+
+            @if (AuthTokenStore.CurrentUser?.Role == AuthTokenStore.RoleOwner)
+            {
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.subtitle2" Class="mb-2 gmm-user__edit-label">Timestamps</MudText>
+
+                <MudTextField Value="@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
+
+                <MudTextField Value="@(string.IsNullOrEmpty(user.CreatedByUser) ? "-" : user.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
+
+                @if (user.UpdatedAt is not null || !string.IsNullOrEmpty(user.UpdatedByUser))
+                {
+                    <MudTextField Value="@(user.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")" Label="Updated At" Variant="Variant.Outlined"
+                                  ReadOnly="true" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
+
+                    <MudTextField Value="@(string.IsNullOrEmpty(user.UpdatedByUser) ? "-" : user.UpdatedByUser)" Label="Updated By" Variant="Variant.Outlined"
+                                  ReadOnly="true" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
+                }
+            }
         }
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Class="mr-2">Cancel</MudButton>
         <MudButton OnClick="Update"
                    Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Disabled="@isSaving">
+                   Class="gmm-user__edit-save"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Disabled="@(isSaving || loadFailed || user is null)">
             @if (isSaving)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -60,3 +105,33 @@
         </MudButton>
     </DialogActions>
 </MudDialog>
+
+<style>
+    .gmm-user__edit-title {
+        font-weight: 700 !important;
+    }
+
+    .gmm-user__edit-label {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .gmm-user__edit-skeleton {
+        gap: 16px;
+    }
+
+    .gmm-user__edit-save {
+        background-color: #10B981;
+        border-radius: 8px;
+    }
+
+    .gmm-user__edit-save:hover {
+        filter: brightness(1.15);
+    }
+
+    .gmm-field-constrained {
+        flex: 0 1 320px !important;
+        min-width: 200px !important;
+        max-width: 320px !important;
+        width: auto !important;
+    }
+</style>
