@@ -1,20 +1,15 @@
 using GMMS.App.Services;
 using Microsoft.AspNetCore.Components;
 
-namespace GMMS.App.Components.Layout
+namespace GMMS.App.Feature.Setting
 {
-    public partial class NavMenu : ComponentBase
+    public partial class Settings : ComponentBase
     {
         [Inject]
         private AuthTokenStore AuthTokenStore { get; set; } = null!;
 
         [Inject]
-        private SessionService Session { get; set; } = null!;
-
-        [Inject]
         private NavigationManager Navigation { get; set; } = null!;
-
-        private bool _accountMenuOpen;
 
         private string Initial => AuthTokenStore.CurrentUser?.UserName is { Length: > 0 } name
             ? name[..1].ToUpperInvariant()
@@ -31,16 +26,6 @@ namespace GMMS.App.Components.Layout
         private void GoToChangePassword()
         {
             Navigation.NavigateTo("/change-password");
-        }
-
-        private void GoToSettings()
-        {
-            Navigation.NavigateTo("/settings");
-        }
-
-        private async Task HandleLogout()
-        {
-            await Session.LogoutAsync();
         }
     }
 }

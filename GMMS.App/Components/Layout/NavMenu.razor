@@ -8,8 +8,6 @@
         }
         <MudNavLink Href="member-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">Members</MudNavLink>
         <MudNavLink Href="membership-list-all" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.HowToReg">All Memberships</MudNavLink>
-        <MudNavLink Href="membershipplan-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Book">Membership Plans</MudNavLink>
-        <MudNavLink Href="paymentmethod-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Wallet">Payment Methods</MudNavLink>
         <MudNavLink Href="payment-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Receipt">Payments</MudNavLink>
         @if (AuthTokenStore.CurrentUser?.Role == "Owner")
         {
@@ -41,6 +39,10 @@
                 </div>
                 <MudDivider />
                 <MudMenuItem OnClick="GoToChangePassword" Icon="@Icons.Material.Filled.LockReset">Change Password</MudMenuItem>
+                @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+                {
+                    <MudMenuItem OnClick="GoToSettings" Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
+                }
                 <MudDivider />
                 <MudMenuItem OnClick="HandleLogout" Icon="@Icons.Material.Filled.Logout" Class="gmm-nav-logout" Style="color:#A78BFA;">Log out</MudMenuItem>
             </ChildContent>
