@@ -1,12 +1,13 @@
 ﻿using GMMS.Domain.Features.DashBoard;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GMMS.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DashBoardController : ControllerBase
+    [Authorize]
+    public class DashBoardController : BaseController
     {
         private readonly DashBoardService _dashBoardService;
 
@@ -19,7 +20,7 @@ namespace GMMS.Api.Controllers
         {
             var result = await _dashBoardService.GetDashboardAsync();
 
-            return Ok(result);
+            return Execute(result);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using GMMS.Database.AppDbContextModels;
+using GMMS.Domain.Enums;
 using GMMS.Domain.Features.Payment.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -163,19 +164,7 @@ namespace GMMS.Domain.Features.Payment
                 };
             }
 
-             var payment = await _db.TblPayments
-                    .FirstOrDefaultAsync(x => x.MembershipId == request.MembershipId && x.Status == "Pending");
-                if (payment != null)
-                {
-                    _logger.LogWarning("A pending payment already exists for MembershipId={MembershipId}.", request.MembershipId);
-                    return new Result<PaymentModel>
-                    {
-                        IsSuccess = false,
-                        Message = "A pending payment already exists for this membership."
-                    };
-                }
-
-                var PaymentMethod = await _db.TblPaymentMethods
+             var PaymentMethod = await _db.TblPaymentMethods
                     .FirstOrDefaultAsync(x => x.PaymentMethodId == request.PaymentMethodId && !x.IsDeleted && x.IsActive);
                      
                 if (PaymentMethod == null)
@@ -207,7 +196,8 @@ namespace GMMS.Domain.Features.Payment
                     PaymentMethodId = request.PaymentMethodId,
                     Amount = request.Amount,
                     Sspath = request.Sspath,
-                    Status = "Pending",
+                    Status = PaymentStatus.Completed.ToString(),
+                    IsDeleted = false,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = createdByUserId
                 };
@@ -217,10 +207,26 @@ namespace GMMS.Domain.Features.Payment
 
                 _logger.LogInformation("Payment created successfully. PaymentId={PaymentId}, MembershipId={MembershipId}", newPayment.PaymentId, request.MembershipId);
 
+                var createdByUserName = await _db.TblUsers
+                    .Where(u => u.UserId == createdByUserId)
+                    .Select(u => u.UserName)
+                    .FirstOrDefaultAsync();
+
                 return new Result<PaymentModel>
                 {
                     IsSuccess = true,
-                    Message = "Payment created successfully."
+                    Message = "Payment created successfully.",
+                    Data = new PaymentModel
+                    {
+                        PaymentId = newPayment.PaymentId,
+                        MembershipId = newPayment.MembershipId,
+                        PaymentMethodName = PaymentMethod.Name,
+                        Amount = newPayment.Amount,
+                        Sspath = newPayment.Sspath,
+                        Status = newPayment.Status,
+                        CreatedAt = newPayment.CreatedAt,
+                        CreatedByUser = createdByUserId + " - " + createdByUserName
+                    }
                 };
             
            

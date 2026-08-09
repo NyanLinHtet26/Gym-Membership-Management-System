@@ -88,7 +88,7 @@ namespace GMMS.App.Feature.Auth
                     }
                     else
                     {
-                        Navigation.NavigateTo("/member-list");
+                        Navigation.NavigateTo("/");
                     }
                 }
                 else

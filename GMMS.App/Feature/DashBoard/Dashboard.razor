@@ -1,0 +1,214 @@
+@page "/"
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <div class="gmm-dash__head">
+        <div>
+            <MudText Typo="Typo.h4" Class="gmm-dash__title">Dashboard</MudText>
+            <MudText Typo="Typo.body2" Class="gmm-dash__subtitle">@DateTime.Today.ToString("dddd, MMMM d, yyyy")</MudText>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="gmm-dash__stats">
+            <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__stat gmm-dash__stat--skeleton">
+                <MudSkeleton Type="SkeletonType.Circle" Width="34px" Height="34px" />
+                <div>
+                    <MudSkeleton Type="SkeletonType.Text" Width="130px" Height="24px" />
+                    <MudSkeleton Type="SkeletonType.Text" Width="90px" Height="14px" />
+                </div>
+            </MudPaper>
+            <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__stat gmm-dash__stat--skeleton">
+                <MudSkeleton Type="SkeletonType.Circle" Width="34px" Height="34px" />
+                <div>
+                    <MudSkeleton Type="SkeletonType.Text" Width="130px" Height="24px" />
+                    <MudSkeleton Type="SkeletonType.Text" Width="90px" Height="14px" />
+                </div>
+            </MudPaper>
+        </div>
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
+            <MudSkeleton Type="SkeletonType.Text" Width="180px" Height="22px" />
+            <MudSkeleton Type="SkeletonType.Rectangle" Height="280px" Class="gmm-dash__chart-skeleton" />
+        </MudPaper>
+    }
+    else if (_errorMessage is not null)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__error pa-6 d-flex flex-column align-center">
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="MudBlazor.Size.Large" Class="mud-text-secondary mb-3" />
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="w-100">
+                @_errorMessage
+            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mt-3">
+                Check your connection to the server, then try again.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" Class="gmm-dash__retry mt-4"
+                       OnClick="RetryAsync" StartIcon="@Icons.Material.Filled.Refresh">
+                Try Again
+            </MudButton>
+        </MudPaper>
+    }
+    else if (_model is not null)
+    {
+        <div class="gmm-dash__stats">
+            <div class="gmm-dash__stat">
+                <MudIcon Icon="@Icons.Material.Filled.People" Class="gmm-dash__stat-icon gmm-dash__stat-icon--violet" />
+                <div>
+                    <MudText Typo="Typo.h6" Class="gmm-dash__stat-value gmm-dash__stat-value--violet">@_model.TotalMembers.ToString("N0")</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Total Members</MudText>
+                </div>
+            </div>
+            <div class="gmm-dash__stat">
+                <MudIcon Icon="@Icons.Material.Filled.Paid" Class="gmm-dash__stat-icon gmm-dash__stat-icon--amber" />
+                <div>
+                    <MudText Typo="Typo.h6" Class="gmm-dash__stat-value gmm-dash__stat-value--amber">@_model.TodayIncome.ToString("C2")</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Today's Income</MudText>
+                </div>
+            </div>
+        </div>
+
+        <MudGrid>
+            <MudItem xs="12">
+                <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
+                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Member Growth</MudText>
+                    <MudText Typo="Typo.body2" Class="gmm-dash__card-subtitle">Total members over the last 6 months</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_memberGrowthOptions" Height="320">
+                        <ApexPointSeries TItem="ChartPoint" Items="_memberGrowthPoints" Name="Total Members"
+                                         SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
+                    </ApexChart>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
+                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Monthly Revenue Trend</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_revenueTrendOptions" Height="300">
+                        <ApexPointSeries TItem="ChartPoint" Items="_revenueTrendPoints" Name="Revenue"
+                                         SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
+                    </ApexChart>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
+                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Most Used Plans</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_planUsageOptions" Height="300">
+                        <ApexPointSeries TItem="ChartPoint" Items="_planUsagePoints" Name="Members"
+                                         SeriesType="SeriesType.Bar" XValue="e => e.X" YValue="e => e.Y" />
+                    </ApexChart>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__empty pa-8 d-flex flex-column align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Insights" Size="MudBlazor.Size.Large" Class="mud-text-secondary mb-3" />
+            <MudText Typo="Typo.body1" Class="mb-1"><strong>No dashboard data yet</strong></MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="text-align: center; max-width: 420px;">
+                Add members and record payments to see your gym's stats here.
+            </MudText>
+        </MudPaper>
+    }
+</MudContainer>
+
+<style>
+    .gmm-dash__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+
+    .gmm-dash__title {
+        font-weight: 700 !important;
+        text-wrap: balance;
+    }
+
+    .gmm-dash__subtitle {
+        color: var(--mud-palette-text-secondary);
+        text-wrap: pretty;
+    }
+
+    .gmm-dash__stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin: 20px 0;
+    }
+
+    .gmm-dash__stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+        background-color: var(--mud-palette-surface);
+        min-width: 240px;
+    }
+
+    .gmm-dash__stat--skeleton {
+        min-width: 260px;
+    }
+
+    .gmm-dash__stat-icon {
+        font-size: 26px;
+    }
+
+    .gmm-dash__stat-icon--violet {
+        color: #6D28D9;
+    }
+
+    .gmm-dash__stat-icon--amber {
+        color: #F59E0B;
+    }
+
+    .gmm-dash__stat-value {
+        margin: 0;
+        line-height: 1.2;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .gmm-dash__stat-value--violet {
+        color: #6D28D9;
+    }
+
+    .gmm-dash__stat-value--amber {
+        color: #F59E0B;
+    }
+
+    .gmm-dash__card {
+        border-radius: 12px;
+        padding: 16px 16px 8px;
+        height: 100%;
+    }
+
+    .gmm-dash__card-title {
+        font-weight: 600 !important;
+        margin-bottom: 2px;
+    }
+
+    .gmm-dash__card-subtitle {
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .gmm-dash__chart-skeleton {
+        margin-top: 16px;
+        border-radius: 8px;
+    }
+
+    .gmm-dash__error {
+        margin-top: 8px;
+        border-radius: 12px;
+    }
+
+    .gmm-dash__retry {
+        border-radius: 8px;
+    }
+
+    .gmm-dash__empty {
+        margin-top: 24px;
+        border-radius: 12px;
+    }
+</style>
