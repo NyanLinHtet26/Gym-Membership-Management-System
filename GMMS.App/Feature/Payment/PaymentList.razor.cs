@@ -31,17 +31,27 @@ namespace GMMS.App.Feature.Payment
         private int _pageSelected = 1;
         private CancellationTokenSource? _searchCts;
 
-        private DateRange? _dateRange;
-        public DateRange? SelectedDateRange
+        private DateTime? _fromDate;
+        private DateTime? _fromDatePicker
         {
-            get => _dateRange;
+            get => _fromDate;
             set
             {
-                _dateRange = value;
-                if (value is null || (value.Start.HasValue && value.End.HasValue))
-                {
-                    _ = LoadPage(1, false);
-                }
+                if (_fromDate == value) return;
+                _fromDate = value;
+                _ = LoadPage(1, false);
+            }
+        }
+
+        private DateTime? _toDate;
+        private DateTime? _toDatePicker
+        {
+            get => _toDate;
+            set
+            {
+                if (_toDate == value) return;
+                _toDate = value;
+                _ = LoadPage(1, false);
             }
         }
 
@@ -106,7 +116,7 @@ namespace GMMS.App.Feature.Payment
             try
             {
                 var result = await ApiService.GetPaymentListAsync<Result<PaymentListResponseModel>>(
-                    pageNumber, pageSize, _searchTerm, SelectedDateRange?.Start, SelectedDateRange?.End);
+                    pageNumber, pageSize, _searchTerm, _fromDate, _toDate);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
                     payments = result.Data.Payments;
