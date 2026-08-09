@@ -22,10 +22,20 @@ namespace GMMS.App.Feature.Payment
 
         private PaymentDetailModel? detail;
         private bool isLoading = true;
+        private bool loadFailed;
         private string? errorMessage;
 
         protected override async Task OnInitializedAsync()
         {
+            await LoadDataAsync();
+        }
+
+        private async Task LoadDataAsync()
+        {
+            isLoading = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var result = await ApiService.GetPaymentDetailsAsync<Result<PaymentDetailModel>>(PaymentId);
@@ -36,16 +46,31 @@ namespace GMMS.App.Feature.Payment
                 else
                 {
                     errorMessage = result?.Message ?? "Payment not found.";
+                    loadFailed = true;
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {
                 isLoading = false;
             }
+        }
+
+        private async Task RetryAsync() => await LoadDataAsync();
+
+        private Color GetStatusColor(string status)
+        {
+            return status switch
+            {
+                "Completed" => Color.Success,
+                "Pending" => Color.Warning,
+                "Failed" => Color.Error,
+                _ => Color.Default
+            };
         }
 
         private void Cancel()

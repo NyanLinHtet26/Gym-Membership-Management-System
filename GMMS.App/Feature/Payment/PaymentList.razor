@@ -1,69 +1,318 @@
 @page "/payment-list"
 
 <MudContainer MaxWidth="MaxWidth.Large">
-    <MudPaper Class="pa-6" Elevation="2">
-        <MudText Typo="Typo.h4" Class="mb-4">Payment List</MudText>
+    <div class="gmm-pay__head">
+        <div>
+            <MudText Typo="Typo.h4" Class="gmm-pay__title">Payments</MudText>
+            <MudText Typo="Typo.body2" Class="gmm-pay__subtitle">Track incoming payments, amounts and their status.</MudText>
+        </div>
+        @if (AuthTokenStore.CurrentUser?.Role == "Admin")
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-pay__add"
+                       OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.AddCard">
+                Record Payment
+            </MudButton>
+        }
+    </div>
 
-        <div class="d-flex flex-wrap justify-space-between align-start mb-4" style="gap: 16px;">
-            <MudTextField @bind-Value="searchTerm" Placeholder="Search..." Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" Immediate="true" Style="width: 100%; max-width: 380px;" />
-
-            <div class="d-flex flex-wrap align-center" style="gap: 12px;">
-                <MudText Typo="Typo.body2" Class="d-flex align-center">
-                    Total: <strong class="ml-2 mud-primary-text">@totalCount</strong>
-                </MudText>
-                @if (AuthTokenStore.CurrentUser?.Role == "Admin")
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small">
-                        Create Payment
-                    </MudButton>
-                }
+    <div class="gmm-pay__stats">
+        <div class="gmm-pay__stat">
+            <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="gmm-pay__stat-icon" />
+            <div>
+                <MudText Typo="Typo.h6" Class="gmm-pay__stat-value">@totalCount</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Total Payments</MudText>
             </div>
         </div>
+    </div>
 
-        @if (isLoading)
-        {
-            <div class="d-flex justify-center pa-12">
-                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+    <div class="gmm-pay__toolbar">
+        <MudTextField @bind-Value="searchTerm"
+                      Placeholder="Search by payment method..."
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true"
+                      Immediate="true"
+                      Class="gmm-field-search" />
+        <MudDateRangePicker @bind-DateRange="SelectedDateRange"
+                            Label="Created between"
+                            Variant="Variant.Outlined"
+                            Placeholder="Start - End"
+                            Clearable="true"
+                            Class="gmm-pay__date-range" />
+    </div>
+
+    @if (isLoading)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-pay__table gmm-pay__skeleton">
+            <div class="pa-4 d-flex flex-column gmm-pay__skeleton-rows">
+                @for (var i = 0; i < 6; i++)
+                {
+                    <div class="d-flex align-center gmm-pay__skeleton-row">
+                        <MudSkeleton Width="40px" Height="22px" />
+                        <MudSkeleton Width="200px" Height="22px" />
+                        <MudSkeleton Width="100px" Height="22px" />
+                        <MudSkeleton Width="80px" Height="22px" />
+                        <MudSkeleton Width="130px" Height="22px" />
+                        <MudSkeleton Width="120px" Height="22px" />
+                        <MudSkeleton Width="60px" Height="22px" />
+                    </div>
+                }
             </div>
-        }
-        else if (errorMessage is not null)
-        {
-            <MudAlert Severity="Severity.Error" Class="mt-4">@errorMessage</MudAlert>
-        }
-        else if (payments is not null && payments.Count > 0)
-        {
-            <MudTable Items="payments" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm" Elevation="1" Class="rounded">
+        </MudPaper>
+    }
+    else if (errorMessage is not null)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-pay__error pa-6 d-flex flex-column align-center">
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Class="mud-text-secondary mb-3" />
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="w-100">
+                @errorMessage
+            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mt-3">
+                Check your connection to the server, then try again.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-pay__retry mt-4"
+                       OnClick="RetryAsync" StartIcon="@Icons.Material.Filled.Refresh">
+                Try Again
+            </MudButton>
+        </MudPaper>
+    }
+    else if (payments is not null && payments.Count > 0)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-pay__table">
+            <MudTable Items="payments" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
-                    <MudTh>#</MudTh>
-                    <MudTh>Payment ID</MudTh>
+                    <MudTh Style="width: 56px;">#</MudTh>
                     <MudTh>Payment Method</MudTh>
                     <MudTh>Amount</MudTh>
                     <MudTh>Status</MudTh>
                     <MudTh>Created At</MudTh>
-                    <MudTh Style="text-align: center;">Actions</MudTh>
+                    @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+                    {
+                        <MudTh>Created By</MudTh>
+                    }
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="#">@context.PaymentId</MudTd>
-                    <MudTd DataLabel="Payment ID">@context.PaymentId</MudTd>
-                    <MudTd DataLabel="Payment Method">@context.PaymentMethodName</MudTd>
-                    <MudTd DataLabel="Amount">@context.Amount.ToString("C2")</MudTd>
-                    <MudTd DataLabel="Status">
-                        <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+                    <MudTd DataLabel="#" Style="color: var(--mud-palette-text-secondary);">@context.PaymentId</MudTd>
+                    <MudTd DataLabel="Payment Method">
+                        <div class="d-flex align-center">
+                            <MudIcon Icon="@Icons.Material.Filled.Wallet" Size="Size.Small" Class="mr-1 gmm-pay__method-icon" />
+                            <strong>@context.PaymentMethodName</strong>
+                        </div>
                     </MudTd>
-                    <MudTd DataLabel="Created At">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
-                    <MudTd DataLabel="Actions" Style="text-align: center;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="@(() => OpenDetailDialog(context.PaymentId))" Size="Size.Small" />
+                    <MudTd DataLabel="Amount" Style="font-weight: 600;">@context.Amount.ToString("C2")</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                                 Color="@GetStatusColor(context.Status)" Class="gmm-pay__chip">
+                            @context.Status
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Created At" Style="color: var(--mud-palette-text-secondary); white-space: nowrap;">
+                        <div class="d-flex align-center">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Class="mr-1 gmm-pay__date-icon" />
+                            <span>@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                        </div>
+                    </MudTd>
+                    @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+                    {
+                        <MudTd DataLabel="Created By" Style="color: var(--mud-palette-text-secondary);">
+                            @(string.IsNullOrEmpty(context.CreatedByUser) ? "—" : context.CreatedByUser)
+                        </MudTd>
+                    }
+                    <MudTd DataLabel="Actions" Style="text-align: right; white-space: nowrap;">
+                        <MudTooltip Text="View details">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info"
+                                           OnClick="@(() => OpenDetailDialog(context.PaymentId))" Size="Size.Small" />
+                        </MudTooltip>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
+        </MudPaper>
 
-            <div class="d-flex flex-column align-center mt-6">
-                <MudPagination BoundaryCount="1" MiddleCount="1" Count="@totalPages" Selected="@_pageSelected" SelectedChanged="PageChanged" />
-            </div>
-        }
-        else
-        {
-            <MudAlert Severity="Severity.Info" Class="mt-4">No payments found.</MudAlert>
-        }
-    </MudPaper>
+        <div class="gmm-pay__pagination">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Page @_pageSelected of @totalPages · @totalCount payments
+            </MudText>
+            <MudPagination BoundaryCount="1" MiddleCount="1" Count="@totalPages" Selected="@_pageSelected" SelectedChanged="PageChanged" />
+        </div>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="gmm-pay__empty pa-8 d-flex flex-column align-center">
+            <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Large" Class="mud-text-secondary mb-3" />
+            <MudText Typo="Typo.body1" Class="mb-1"><strong>No payments found</strong></MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="text-align: center; max-width: 420px;">
+                @(string.IsNullOrWhiteSpace(_searchTerm) && SelectedDateRange is null
+                    ? "No payments recorded yet. Record the first one to get started."
+                    : "Nothing matches your current search or date range. Try a different term or dates.")
+            </MudText>
+            @if (string.IsNullOrWhiteSpace(_searchTerm) && SelectedDateRange is null && AuthTokenStore.CurrentUser?.Role == "Admin")
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-pay__add mt-4"
+                           OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.AddCard">
+                    Record Payment
+                </MudButton>
+            }
+        </MudPaper>
+    }
 </MudContainer>
+
+<style>
+    .gmm-pay__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+
+    .gmm-pay__title {
+        font-weight: 700 !important;
+        text-wrap: balance;
+    }
+
+    .gmm-pay__subtitle {
+        color: var(--mud-palette-text-secondary);
+        text-wrap: pretty;
+    }
+
+    .gmm-pay__add {
+        background-color: #10B981;
+        border-radius: 8px;
+    }
+
+    .gmm-pay__add:hover {
+        filter: brightness(1.15);
+    }
+
+    .gmm-pay__retry {
+        background-color: var(--mud-palette-primary);
+        border-radius: 8px;
+    }
+
+    .gmm-pay__stats {
+        margin: 20px 0;
+    }
+
+    .gmm-pay__stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+        background-color: var(--mud-palette-surface);
+    }
+
+    .gmm-pay__stat-icon {
+        color: #F59E0B;
+    }
+
+    .gmm-pay__stat-value {
+        color: #F59E0B;
+        margin: 0;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .gmm-pay__toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin: 8px 0 16px;
+    }
+
+    .gmm-pay__date-range {
+        flex: 0 1 300px !important;
+        min-width: 240px !important;
+        max-width: 320px !important;
+        width: auto !important;
+    }
+
+    .gmm-pay__table {
+        margin-top: 8px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .gmm-pay__table .mud-table-body td {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .gmm-pay__method-icon {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .gmm-pay__date-icon {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .gmm-pay__chip {
+        border-radius: 6px;
+    }
+
+    .gmm-pay__pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .gmm-pay__error {
+        margin-top: 8px;
+        border-radius: 12px;
+    }
+
+    .gmm-pay__skeleton-rows {
+        gap: 16px;
+    }
+
+    .gmm-pay__skeleton-row {
+        gap: 32px;
+    }
+
+    .gmm-pay__skeleton-row .mud-skeleton:nth-child(1) {
+        flex: 0 0 40px;
+    }
+
+    .gmm-pay__skeleton-row .mud-skeleton:nth-child(2) {
+        flex: 1 1 200px;
+    }
+
+    .gmm-pay__skeleton-row .mud-skeleton:nth-child(3) {
+        flex: 0 0 100px;
+    }
+
+    .gmm-pay__skeleton-row .mud-skeleton:nth-child(4) {
+        flex: 0 0 80px;
+    }
+
+    .gmm-pay__skeleton-row .mud-skeleton:nth-child(5) {
+        flex: 0 0 130px;
+    }
+
+    .gmm-pay__skeleton-row .mud-skeleton:nth-child(6) {
+        flex: 0 0 120px;
+    }
+
+    .gmm-pay__skeleton-row .mud-skeleton:nth-child(7) {
+        flex: 0 0 60px;
+    }
+
+    .gmm-pay__empty {
+        margin-top: 24px;
+        border-radius: 12px;
+    }
+
+    .gmm-field-search {
+        flex: 0 1 320px !important;
+        min-width: 220px !important;
+        max-width: 400px !important;
+        width: auto !important;
+    }
+</style>

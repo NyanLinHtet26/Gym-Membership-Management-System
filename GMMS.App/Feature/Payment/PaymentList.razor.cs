@@ -31,6 +31,20 @@ namespace GMMS.App.Feature.Payment
         private int _pageSelected = 1;
         private CancellationTokenSource? _searchCts;
 
+        private DateRange? _dateRange;
+        public DateRange? SelectedDateRange
+        {
+            get => _dateRange;
+            set
+            {
+                _dateRange = value;
+                if (value is null || (value.Start.HasValue && value.End.HasValue))
+                {
+                    _ = LoadPage(1, false);
+                }
+            }
+        }
+
         private string? _searchTerm;
         private string? searchTerm
         {
@@ -91,7 +105,8 @@ namespace GMMS.App.Feature.Payment
 
             try
             {
-                var result = await ApiService.GetPaymentListAsync<Result<PaymentListResponseModel>>(pageNumber, pageSize, _searchTerm);
+                var result = await ApiService.GetPaymentListAsync<Result<PaymentListResponseModel>>(
+                    pageNumber, pageSize, _searchTerm, SelectedDateRange?.Start, SelectedDateRange?.End);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
                     payments = result.Data.Payments;
@@ -113,6 +128,8 @@ namespace GMMS.App.Feature.Payment
                 isLoading = false;
             }
         }
+
+        private async Task RetryAsync() => await LoadPage(pageNumber);
 
         private Color GetStatusColor(string status)
         {

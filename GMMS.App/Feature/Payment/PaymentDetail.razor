@@ -2,8 +2,8 @@
 
 <MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-3" Color="Color.Primary" /> Payment Details
+        <MudText Typo="Typo.h6" Class="gmm-pay__detail-title">
+            <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Class="mr-3" Color="Color.Primary" /> Payment Details
         </MudText>
     </TitleContent>
 
@@ -15,41 +15,60 @@
 
         @if (isLoading)
         {
-            <div class="d-flex justify-center pa-6">
-                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <div class="d-flex flex-column gmm-pay__detail-skeleton">
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+            </div>
+        }
+        else if (loadFailed)
+        {
+            <div class="d-flex flex-column align-center pa-4">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3" Style="text-align: center;">
+                    We couldn't load this payment. Check your connection, then try again.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RetryAsync"
+                           StartIcon="@Icons.Material.Filled.Refresh">
+                    Try Again
+                </MudButton>
             </div>
         }
         else if (detail is not null)
         {
+            <div class="gmm-pay__detail-receipt mb-4">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Amount</MudText>
+                <MudText Typo="Typo.h4" Class="gmm-pay__detail-amount">@detail.Amount.ToString("C2")</MudText>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                         Color="@GetStatusColor(detail.Status)" Class="gmm-pay__detail-chip">
+                    @detail.Status
+                </MudChip>
+            </div>
+
             <MudTextField Value="@detail.MemberName" Label="Member" Variant="Variant.Outlined"
                           ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-4" />
+                          AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3 gmm-field-constrained" />
 
             <MudTextField Value="@detail.MembershipName" Label="Membership" Variant="Variant.Outlined"
                           ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.CardMembership" Class="mb-4" />
+                          AdornmentIcon="@Icons.Material.Filled.CardMembership" Class="mb-3 gmm-field-constrained" />
 
             <MudTextField Value="@detail.PaymentMethodName" Label="Payment Method" Variant="Variant.Outlined"
                           ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Wallet" Class="mb-4" />
+                          AdornmentIcon="@Icons.Material.Filled.Wallet" Class="mb-3 gmm-field-constrained" />
 
-            <MudTextField Value="@detail.Amount.ToString("C2")" Label="Amount" Variant="Variant.Outlined"
-                          ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.AttachMoney" Class="mb-4" />
+            <MudDivider Class="my-3" />
 
-            <MudTextField Value="@detail.Status" Label="Status" Variant="Variant.Outlined"
-                          ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Flag" Class="mb-4" />
+            <MudText Typo="Typo.subtitle2" Class="mb-2 gmm-pay__detail-label">Timestamps</MudText>
 
             <MudTextField Value="@detail.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
                           ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-4" />
+                          AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 
             @if (AuthTokenStore.CurrentUser?.Role == "Owner")
             {
                 <MudTextField Value="@(string.IsNullOrEmpty(detail.CreatedByUser) ? "-" : detail.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
                               ReadOnly="true" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-4" />
+                              AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
             }
         }
     </DialogContent>
@@ -58,3 +77,46 @@
         <MudButton OnClick="Cancel" Variant="Variant.Text">Close</MudButton>
     </DialogActions>
 </MudDialog>
+
+<style>
+    .gmm-pay__detail-title {
+        font-weight: 700 !important;
+    }
+
+    .gmm-pay__detail-label {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .gmm-pay__detail-skeleton {
+        gap: 16px;
+    }
+
+    .gmm-pay__detail-receipt {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 20px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+        background-color: var(--mud-palette-surface);
+    }
+
+    .gmm-pay__detail-amount {
+        font-weight: 700 !important;
+        color: #10B981;
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .gmm-pay__detail-chip {
+        border-radius: 6px;
+    }
+
+    .gmm-field-constrained {
+        flex: 0 1 320px !important;
+        min-width: 200px !important;
+        max-width: 320px !important;
+        width: auto !important;
+    }
+</style>
