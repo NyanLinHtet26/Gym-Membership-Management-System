@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using GMMS.Database.AppDbContextModels;
+using GMMS.Domain.Features.AuditLog;
 using GMMS.Domain.Features.Member.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,19 +19,22 @@ namespace GMMS.Domain.Features.Member
         private readonly IValidator<UpdateMemberRequestModel> _updateValidator;
         private readonly IValidator<MemberListRequestModel> _listValidator;
         private readonly ILogger<MemberService> _logger;
+        private readonly AuditLogService _auditLog;
 
         public MemberService(
             AppDbContext db,
             IValidator<CreateMemberRequestModel> createValidator,
             IValidator<UpdateMemberRequestModel> updateValidator,
             IValidator<MemberListRequestModel> listValidator,
-            ILogger<MemberService> logger)
+            ILogger<MemberService> logger,
+            AuditLogService auditLog)
         {
             _db = db;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
             _listValidator = listValidator;
             _logger = logger;
+            _auditLog = auditLog;
         }
 
         public async Task<Result<MemberListResponseModel>> GetList(MemberListRequestModel request)
@@ -188,6 +192,9 @@ namespace GMMS.Domain.Features.Member
 
             _logger.LogInformation("Member created successfully with MemberId: {MemberId} and MemberCode: {MemberCode}", member.MemberId, member.MemberCode);
 
+            await _auditLog.LogAsync("Tbl_Member", member.MemberId.ToString(), "Create", createdByUserId,
+                newValue: new { member.MemberCode, member.Name });
+
             var created = await ProjectMembers(_db.TblMembers
                 .AsNoTracking()
                 .Where(x => x.MemberId == member.MemberId))
@@ -252,6 +259,8 @@ namespace GMMS.Domain.Features.Member
             }
             #endregion
 
+            var oldValue = new { member.MemberCode, member.Name };
+
             member.MemberCode = request.MemberCode;
             member.Name = request.Name;
             member.UpdatedAt = DateTime.UtcNow;
@@ -275,6 +284,10 @@ namespace GMMS.Domain.Features.Member
             #endregion
 
             _logger.LogInformation("Member with ID: {MemberId} updated successfully.", id);
+
+            await _auditLog.LogAsync("Tbl_Member", id.ToString(), "Update", updatedByUserId,
+                oldValue: oldValue,
+                newValue: new { member.MemberCode, member.Name });
 
             var updated = await ProjectMembers(_db.TblMembers
                 .AsNoTracking()
@@ -329,6 +342,9 @@ namespace GMMS.Domain.Features.Member
             member.UpdatedBy = updatedByUserId;
             await _db.SaveChangesAsync();
             _logger.LogInformation("Member with ID: {MemberId} deleted successfully.", memberId);
+
+            await _auditLog.LogAsync("Tbl_Member", memberId.ToString(), "Delete", updatedByUserId,
+                oldValue: new { member.MemberCode, member.Name });
 
             return new Result<bool>
             {

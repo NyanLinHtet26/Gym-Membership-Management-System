@@ -1,0 +1,35 @@
+@using MudBlazor
+
+<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="gmm-logout__title">
+            <MudIcon Icon="@Icons.Material.Filled.Logout" Class="mr-3" Color="Color.Warning" /> Log Out
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <div class="d-flex flex-column" style="gap: 4px;">
+            <MudText Typo="Typo.body1"><strong>Are you sure you want to log out?</strong></MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                You will be returned to the sign-in page.
+            </MudText>
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Class="mr-2">Cancel</MudButton>
+        <MudButton OnClick="Confirm" Variant="Variant.Filled" Color="Color.Primary" Class="gmm-logout__btn">
+            Yes, Log Out
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .gmm-logout__title {
+        font-weight: 700 !important;
+    }
+
+    .gmm-logout__btn {
+        border-radius: 8px;
+    }
+</style>

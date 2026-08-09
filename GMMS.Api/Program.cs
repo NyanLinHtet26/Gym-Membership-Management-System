@@ -4,6 +4,7 @@ using GMMS.Api.Health;
 using GMMS.Api.Middleware;
 using GMMS.Database.AppDbContextModels;
 using GMMS.Domain.Features.Auth;
+using GMMS.Domain.Features.AuditLog;
 using GMMS.Domain.Features.DashBoard;
 using GMMS.Domain.Features.Member;
 using GMMS.Domain.Features.Member.Models;
@@ -45,10 +46,14 @@ try
 
  builder.Services.AddCors(options =>
  {
-     options.AddPolicy("AllowAll", policy =>
-         policy.AllowAnyOrigin()
+     var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+         ?? new[] { "https://localhost:7232", "http://localhost:5281" };
+
+     options.AddPolicy("AllowApp", policy =>
+         policy.WithOrigins(allowedOrigins)
                .AllowAnyHeader()
-               .AllowAnyMethod());
+               .AllowAnyMethod()
+               .AllowCredentials());
  });
  // Health checks (basic) - extended with DB connectivity check
  builder.Services.AddHealthChecks()
@@ -147,6 +152,7 @@ try
  builder.Services.AddScoped<DashBoardService>();
  builder.Services.AddScoped<TokenService>();
  builder.Services.AddScoped<CookieService>();
+ builder.Services.AddScoped<AuditLogService>();
 
 
 
@@ -169,7 +175,7 @@ try
      app.UseHttpsRedirection();
  }
 
- app.UseCors("AllowAll");
+ app.UseCors("AllowApp");
 
  app.UseAuthentication();
  app.UseAuthorization();

@@ -92,7 +92,7 @@ public sealed class AuthMessageHandler : DelegatingHandler
                 return false;
             }
 
-            await _tokenStorage.UpdateTokensAsync(result.AccessToken.Token, result.RefreshToken.Token);
+            await _tokenStorage.UpdateTokensAsync(result.AccessToken, result.RefreshToken.Token);
             return true;
         }
         catch

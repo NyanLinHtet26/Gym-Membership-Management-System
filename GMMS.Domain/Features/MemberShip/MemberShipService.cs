@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using GMMS.Database.AppDbContextModels;
 using GMMS.Domain.Enums;
+using GMMS.Domain.Features.AuditLog;
 using GMMS.Domain.Features.Member;
 using GMMS.Domain.Features.MemberShip.Models;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ namespace GMMS.Domain.Features.MemberShip
         private readonly IValidator<CreateMemberShipRequestModel> _createValidator;
         private readonly IValidator<UpdateMembershipRequestModel> _updateValidator;
         private readonly ILogger<MemberShipService> _logger;
+        private readonly AuditLogService _auditLog;
 
         public MemberShipService(
             AppDbContext db,
@@ -28,7 +30,8 @@ namespace GMMS.Domain.Features.MemberShip
             IValidator<AllMemberShipListRequestModel> allListValidator,
             IValidator<CreateMemberShipRequestModel> createValidator,
             IValidator<UpdateMembershipRequestModel> updateValidator,
-            ILogger<MemberShipService> logger)
+            ILogger<MemberShipService> logger,
+            AuditLogService auditLog)
         {
             _db = db;
             _listValidator = listValidator;
@@ -36,6 +39,7 @@ namespace GMMS.Domain.Features.MemberShip
             _createValidator = createValidator;
             _updateValidator = updateValidator;
             _logger = logger;
+            _auditLog = auditLog;
         }
 
         public async Task<Result<MemberShipListResponseModel>> GetList(MemberShipListRequestModel request)
@@ -416,6 +420,15 @@ namespace GMMS.Domain.Features.MemberShip
                 await _db.TblPayments.AddAsync(newPayment);
                 await _db.SaveChangesAsync();
 
+                await _auditLog.LogAsync("Tbl_Payment", newPayment.PaymentId.ToString(), "Create", createdByUserId,
+                    newValue: new
+                    {
+                        newPayment.MembershipId,
+                        newPayment.PaymentMethodId,
+                        newPayment.Amount,
+                        newPayment.Status
+                    });
+
                 await transaction.CommitAsync();
             }
             catch
@@ -426,6 +439,16 @@ namespace GMMS.Domain.Features.MemberShip
             #endregion
 
             _logger.LogInformation("Membership created successfully with MembershipId: {MembershipId} for MemberId: {MemberId}", newMembership.MembershipId, request.MemberId);
+
+            await _auditLog.LogAsync("Tbl_Membership", newMembership.MembershipId.ToString(), "Create", createdByUserId,
+                newValue: new
+                {
+                    newMembership.MemberId,
+                    newMembership.MembershipPlanId,
+                    newMembership.StartDate,
+                    newMembership.EndDate,
+                    newMembership.Status
+                });
 
             return new Result<MembershipDetailModel>
             {
@@ -522,6 +545,8 @@ namespace GMMS.Domain.Features.MemberShip
             }
             #endregion
 
+            var oldValue = new { membership.MembershipPlanId, membership.EndDate };
+
             membership.MembershipPlanId = request.MembershipPlanId;
             membership.EndDate = membership.StartDate.AddDays(plan.DurationDays);
             membership.UpdatedAt = DateTime.UtcNow;
@@ -530,6 +555,15 @@ namespace GMMS.Domain.Features.MemberShip
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("Membership with ID: {MembershipId} updated successfully.", request.MembershipId);
+
+            await _auditLog.LogAsync("Tbl_Membership", request.MembershipId.ToString(), "Update", updatedByUserId,
+                oldValue: oldValue,
+                newValue: new
+                {
+                    membership.MembershipPlanId,
+                    membership.EndDate,
+                    membership.Status
+                });
 
             return new Result<MembershipDetailModel>
             {
@@ -595,6 +629,15 @@ namespace GMMS.Domain.Features.MemberShip
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("Membership with ID: {MembershipId} deleted successfully.", membershipId);
+
+            await _auditLog.LogAsync("Tbl_Membership", membershipId.ToString(), "Delete", updatedByUserId,
+                oldValue: new
+                {
+                    membership.MemberId,
+                    membership.MembershipPlanId,
+                    membership.StartDate,
+                    membership.EndDate
+                });
 
             return new Result<bool>
             {

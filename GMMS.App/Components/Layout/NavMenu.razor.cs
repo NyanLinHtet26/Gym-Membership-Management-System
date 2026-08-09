@@ -1,5 +1,6 @@
 using GMMS.App.Services;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace GMMS.App.Components.Layout
 {
@@ -13,6 +14,9 @@ namespace GMMS.App.Components.Layout
 
         [Inject]
         private NavigationManager Navigation { get; set; } = null!;
+
+        [Inject]
+        private IDialogService DialogService { get; set; } = null!;
 
         private bool _accountMenuOpen;
 
@@ -40,7 +44,13 @@ namespace GMMS.App.Components.Layout
 
         private async Task HandleLogout()
         {
-            await Session.LogoutAsync();
+            var dialog = await DialogService.ShowAsync<LogoutConfirm>("Log Out");
+            var result = await dialog.Result;
+
+            if (result is not null && !result.Canceled)
+            {
+                await Session.LogoutAsync();
+            }
         }
     }
 }

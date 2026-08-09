@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using GMMS.Database.AppDbContextModels;
 using GMMS.Domain.Enums;
+using GMMS.Domain.Features.AuditLog;
 using GMMS.Domain.Features.Payment.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,17 +19,20 @@ namespace GMMS.Domain.Features.Payment
         private readonly IValidator<PaymentListRequestModel> _listValidator;
         private readonly IValidator<CreatePaymentRequestModel> _createValidator;
         private readonly ILogger<PaymentService> _logger;
+        private readonly AuditLogService _auditLog;
 
         public PaymentService(
             AppDbContext db,
             IValidator<PaymentListRequestModel> listValidator,
             IValidator<CreatePaymentRequestModel> createValidator,
-            ILogger<PaymentService> logger)
+            ILogger<PaymentService> logger,
+            AuditLogService auditLog)
         {
             _db = db;
             _listValidator = listValidator;
             _createValidator = createValidator;
             _logger = logger;
+            _auditLog = auditLog;
         }
 
         public async Task<Result<PaymentListResponseModel>> GetList(PaymentListRequestModel request)
@@ -48,7 +52,8 @@ namespace GMMS.Domain.Features.Payment
 
             
                 var query = _db.TblPayments
-                    .AsNoTracking();
+                    .AsNoTracking()
+                    .Where(x => !x.IsDeleted);
 
                 if (!string.IsNullOrWhiteSpace(request.SearchTerm))
                 {
@@ -117,7 +122,7 @@ namespace GMMS.Domain.Features.Payment
 
             var payment = await _db.TblPayments
                     .AsNoTracking()
-                    .Where(x => x.PaymentId == paymentId)
+                    .Where(x => !x.IsDeleted && x.PaymentId == paymentId)
                     .Select(x => new PaymentDetailModel
                     {
                         PaymentId = x.PaymentId,
@@ -206,6 +211,15 @@ namespace GMMS.Domain.Features.Payment
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Payment created successfully. PaymentId={PaymentId}, MembershipId={MembershipId}", newPayment.PaymentId, request.MembershipId);
+
+                await _auditLog.LogAsync("Tbl_Payment", newPayment.PaymentId.ToString(), "Create", createdByUserId,
+                    newValue: new
+                    {
+                        newPayment.MembershipId,
+                        newPayment.PaymentMethodId,
+                        newPayment.Amount,
+                        newPayment.Status
+                    });
 
                 var createdByUserName = await _db.TblUsers
                     .Where(u => u.UserId == createdByUserId)

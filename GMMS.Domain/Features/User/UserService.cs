@@ -1,5 +1,6 @@
 using FluentValidation;
 using GMMS.Database.AppDbContextModels;
+using GMMS.Domain.Features.AuditLog;
 using GMMS.Domain.Features.User.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ public class UserService
     private readonly IValidator<UpdateUserRequestModel> _updateValidator;
     private readonly IValidator<ResetPasswordRequestModel> _resetPasswordValidator;
     private readonly ILogger<UserService> _logger;
+    private readonly AuditLogService _auditLog;
 
     public UserService(
         AppDbContext db,
@@ -21,7 +23,8 @@ public class UserService
         IValidator<CreateUserRequestModel> createValidator,
         IValidator<UpdateUserRequestModel> updateValidator,
         IValidator<ResetPasswordRequestModel> resetPasswordValidator,
-        ILogger<UserService> logger)
+        ILogger<UserService> logger,
+        AuditLogService auditLog)
     {
         _db = db;
         _listValidator = listValidator;
@@ -29,6 +32,7 @@ public class UserService
         _updateValidator = updateValidator;
         _resetPasswordValidator = resetPasswordValidator;
         _logger = logger;
+        _auditLog = auditLog;
     }
 
     public async Task< Result<UserListResponseModel>> GetList(UserListRequestModel request)
@@ -193,6 +197,9 @@ public class UserService
 
             _logger.LogInformation("User created successfully. UserId={UserId}, UserName={UserName}", user.UserId, request.UserName);
 
+            await _auditLog.LogAsync("Tbl_User", user.UserId.ToString(), "Create", createdByUserId,
+                newValue: new { user.UserName, user.Role, user.IsActive });
+
             return new Result<UserModel>
             {
                 IsSuccess = true,
@@ -256,6 +263,8 @@ public class UserService
                 };
             }
 
+            var oldValue = new { user.UserName, user.Role, user.IsActive };
+
             user.UserName = request.UserName;
             user.Role = request.Role;
             user.IsActive = request.IsActive;
@@ -264,6 +273,10 @@ public class UserService
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("User with ID: {UserId} updated successfully.", request.UserId);
+
+            await _auditLog.LogAsync("Tbl_User", request.UserId.ToString(), "Update", updatedByUserId,
+                oldValue: oldValue,
+                newValue: new { user.UserName, user.Role, user.IsActive });
 
             return new Result<UserModel>
             {
@@ -324,6 +337,9 @@ public class UserService
 
             _logger.LogInformation("Password reset successfully for UserId: {UserId}", request.UserId);
 
+            await _auditLog.LogAsync("Tbl_User", request.UserId.ToString(), "ResetPassword", updatedByUserId,
+                newValue: new { user.UserName, user.MustChangePassword });
+
             return new Result<bool>
             {
                 IsSuccess = true,
@@ -356,6 +372,9 @@ public class UserService
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("User with ID: {UserId} deleted successfully.", userId);
+
+            await _auditLog.LogAsync("Tbl_User", userId.ToString(), "Delete", updatedByUserId,
+                oldValue: new { user.UserName, user.Role });
 
             return new Result<bool>
             {

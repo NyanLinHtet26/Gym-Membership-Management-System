@@ -56,7 +56,7 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
-            await _tokenStorage.SaveAuthAsync(result.AccessToken.Token, result.RefreshToken.Token, result.User);
+            await _tokenStorage.SaveAuthAsync(result.AccessToken, result.RefreshToken.Token, result.User);
 
             if (result.User.MustChangePassword)
             {

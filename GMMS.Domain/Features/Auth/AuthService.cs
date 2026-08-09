@@ -122,7 +122,7 @@ public class AuthService
             return new Result<LoginResultModel>
             {
                 IsSuccess = false,
-                Message = "Referch token is missing"
+                Message = "Refresh token is missing"
             };
         }
         var refreshTokenHash = _tokenService.HashRefreshToken(refreshtoken);

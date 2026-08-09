@@ -1,5 +1,6 @@
 ﻿ using FluentValidation;
 using GMMS.Database.AppDbContextModels;
+using GMMS.Domain.Features.AuditLog;
 using GMMS.Domain.Features.PaymentMethod.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,19 +19,22 @@ namespace GMMS.Domain.Features.PaymentMethod
         private readonly IValidator<PaymentMethodCreateRequestModel> _createValidator;
         private readonly IValidator<PaymentMethodUpdateRequestModel> _updateValidator;
         private readonly ILogger<PaymentMethodService> _logger;
+        private readonly AuditLogService _auditLog;
 
         public PaymentMethodService(
             AppDbContext db,
             IValidator<PaymentMethodListRequestModel> listValidator,
             IValidator<PaymentMethodCreateRequestModel> createValidator,
             IValidator<PaymentMethodUpdateRequestModel> updateValidator,
-            ILogger<PaymentMethodService> logger)
+            ILogger<PaymentMethodService> logger,
+            AuditLogService auditLog)
         {
             _db = db;
             _listValidator = listValidator;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
             _logger = logger;
+            _auditLog = auditLog;
         }
 
         public async Task<Result<PaymentMethodListResponseModel>> GetList(PaymentMethodListRequestModel request)
@@ -182,6 +186,9 @@ namespace GMMS.Domain.Features.PaymentMethod
 
                 _logger.LogInformation("Payment method created successfully with PaymentMethodId: {PaymentMethodId}", paymentMethod.PaymentMethodId);
 
+                await _auditLog.LogAsync("Tbl_PaymentMethod", paymentMethod.PaymentMethodId.ToString(), "Create", createdByUserId,
+                    newValue: new { paymentMethod.PaymentMethodCode, paymentMethod.Name, paymentMethod.IsActive });
+
                 return new Result<PaymentMethodModel>
                 {
                     IsSuccess = true,
@@ -239,6 +246,8 @@ namespace GMMS.Domain.Features.PaymentMethod
                     };
                 }
 
+                var oldValue = new { paymentMethod.PaymentMethodCode, paymentMethod.Name, paymentMethod.IsActive };
+
                 paymentMethod.PaymentMethodCode = request.PaymentMethodCode.ToUpperInvariant();
                 paymentMethod.Name = request.Name.Trim();
                 paymentMethod.IsActive = request.IsActive;
@@ -247,6 +256,10 @@ namespace GMMS.Domain.Features.PaymentMethod
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Payment method with ID: {PaymentMethodId} updated successfully.", request.PaymentMethodId);
+
+                await _auditLog.LogAsync("Tbl_PaymentMethod", request.PaymentMethodId.ToString(), "Update", updatedByUserId,
+                    oldValue: oldValue,
+                    newValue: new { paymentMethod.PaymentMethodCode, paymentMethod.Name, paymentMethod.IsActive });
 
                 return new Result<PaymentMethodModel>
                 {
@@ -293,6 +306,9 @@ namespace GMMS.Domain.Features.PaymentMethod
                 await _db.SaveChangesAsync();
 
                 _logger.LogInformation("Payment method with ID: {PaymentMethodId} deleted successfully.", paymentMethodId);
+
+                await _auditLog.LogAsync("Tbl_PaymentMethod", paymentMethodId.ToString(), "Delete", updatedByUserId,
+                    oldValue: new { paymentMethod.PaymentMethodCode, paymentMethod.Name });
 
                 return new Result<bool>
                 {

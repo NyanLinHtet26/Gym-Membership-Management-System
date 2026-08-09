@@ -23,7 +23,7 @@ public sealed class TokenData
 public sealed class LoginResponseData
 {
     public LoginUserData User { get; set; } = new();
-    public TokenData AccessToken { get; set; } = new();
+    public string AccessToken { get; set; } = string.Empty;
     public TokenData RefreshToken { get; set; } = new();
 }
 

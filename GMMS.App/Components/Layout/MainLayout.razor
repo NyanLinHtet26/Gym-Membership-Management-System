@@ -3,7 +3,9 @@
 @inject AuthTokenStore AuthTokenStore
 @inject NavigationManager Navigation
 @inject SessionService Session
+@inject IDialogService DialogService
 @using GMMS.App.Theme
+@using MudBlazor
 
 <MudThemeProvider Theme="GMMSTheme.Theme" IsDarkMode="true" />
 <MudDialogProvider />
@@ -114,7 +116,13 @@
 
     private async Task HandleLogout()
     {
-        await Session.LogoutAsync();
+        var dialog = await DialogService.ShowAsync<LogoutConfirm>("Log Out");
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await Session.LogoutAsync();
+        }
     }
 
     public void Dispose()
