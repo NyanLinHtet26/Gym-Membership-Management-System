@@ -17,6 +17,9 @@ namespace GMMS.App.Feature.User
         [Inject]
         private ISnackbar Snackbar { get; set; } = null!;
 
+        [Inject]
+        private AuthTokenStore AuthTokenStore { get; set; } = null!;
+
         [SupplyParameterFromQuery(Name = "page")]
         public int Page { get; set; } = 1;
 
@@ -78,6 +81,8 @@ namespace GMMS.App.Feature.User
             _pageSelected = page;
             await LoadPage(page);
         }
+
+        private async Task RetryAsync() => await LoadPage(pageNumber);
 
         private async Task LoadPage(int page, bool showLoading = true)
         {

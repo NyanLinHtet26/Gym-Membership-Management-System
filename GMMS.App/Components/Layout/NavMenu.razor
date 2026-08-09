@@ -2,6 +2,10 @@
 
 <MudPaper Width="250px" Elevation="0" Class="gmm-nav-dark d-flex flex-column" Style="background-color: transparent; color: #fff; height:100%;">
     <MudNavMenu Rounded="true" Margin="Margin.Dense" Color="Color.Primary" Class="pa-2">
+        @if (AuthTokenStore.CurrentUser?.Role == AuthTokenStore.RoleOwner)
+        {
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+        }
         <MudNavLink Href="member-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">Members</MudNavLink>
         <MudNavLink Href="membership-list-all" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.HowToReg">All Memberships</MudNavLink>
         <MudNavLink Href="membershipplan-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Book">Membership Plans</MudNavLink>

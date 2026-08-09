@@ -29,37 +29,31 @@ namespace GMMS.App.Feature.Membership
         private List<PaymentMethodModel> paymentMethods = new();
         private bool isLoadingData = true;
         private bool isSaving;
+        private bool loadFailed;
         private string? errorMessage;
 
         private string? selectedMemberName;
+        private MemberShipModel? existingMembership;
 
-        private string _memberStr
-        {
-            get => request.MemberId > 0 ? request.MemberId.ToString() : "";
-            set => request.MemberId = int.TryParse(value, out var id) ? id : 0;
-        }
+        private DateOnly? CalculatedEndDate
+            => GetSelectedPlan() is { } plan
+                ? DateOnly.FromDateTime(DateTime.Today.AddDays(plan.DurationDays))
+                : null;
 
         private MemberShipPlanModel? GetSelectedPlan()
             => plans.FirstOrDefault(p => p.MemberShipPlanId == request.MembershipPlanId);
 
-        private string _planStr
-        {
-            get => request.MembershipPlanId > 0 ? request.MembershipPlanId.ToString() : "";
-            set
-            {
-                request.MembershipPlanId = int.TryParse(value, out var id) ? id : 0;
-                request.Amount = GetSelectedPlan()?.Price ?? 0;
-            }
-        }
-
-        private string _paymentMethodStr
-        {
-            get => request.PaymentMethodId > 0 ? request.PaymentMethodId.ToString() : "";
-            set => request.PaymentMethodId = int.TryParse(value, out var id) ? id : 0;
-        }
-
         protected override async Task OnInitializedAsync()
         {
+            await LoadAsync();
+        }
+
+        private async Task LoadAsync()
+        {
+            isLoadingData = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var memberResult = await ApiService.GetMemberListAsync<Result<MemberListResponseModel>>(1, 100);
@@ -80,6 +74,9 @@ namespace GMMS.App.Feature.Membership
                 else if (string.IsNullOrEmpty(errorMessage))
                     errorMessage = methodResult?.Message ?? "Failed to load payment methods.";
 
+                if (!string.IsNullOrEmpty(errorMessage))
+                    loadFailed = true;
+
                 if (MemberId > 0)
                 {
                     request.MemberId = MemberId;
@@ -87,17 +84,81 @@ namespace GMMS.App.Feature.Membership
                     selectedMemberName = member is not null
                         ? $"{member.Name} ({member.MemberCode})"
                         : $"Member #{MemberId}";
+                    await LoadExistingMembershipAsync(MemberId);
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {
                 isLoadingData = false;
                 StateHasChanged();
             }
+        }
+
+        private async Task LoadExistingMembershipAsync(int memberId)
+        {
+            existingMembership = null;
+            if (memberId <= 0) return;
+
+            try
+            {
+                var result = await ApiService.GetMembershipListAsync<Result<MemberShipListResponseModel>>(memberId, 1, 10);
+                if (result?.IsSuccess == true && result.Data is not null)
+                {
+                    existingMembership = result.Data.MemberShips
+                        .OrderBy(m => m.Status == "Expired" ? 1 : 0)
+                        .ThenByDescending(m => m.EndDate)
+                        .FirstOrDefault();
+                }
+            }
+            catch
+            {
+                // Existing membership display is informational; ignore load failures.
+            }
+        }
+
+        private async Task RetryAsync() => await LoadAsync();
+
+        private void OnMemberValueChanged(int memberId)
+        {
+            request.MemberId = memberId;
+            _ = LoadExistingMembershipAsync(memberId);
+        }
+
+        private void OnPlanValueChanged(int membershipPlanId)
+        {
+            request.MembershipPlanId = membershipPlanId;
+            request.Amount = GetSelectedPlan()?.Price ?? 0;
+        }
+
+        private void OnPaymentMethodValueChanged(int paymentMethodId)
+        {
+            request.PaymentMethodId = paymentMethodId;
+        }
+
+        private int DaysRemaining(MemberShipModel membership)
+        {
+            return (membership.EndDate.ToDateTime(TimeOnly.MinValue) - DateTime.Today).Days;
+        }
+
+        private bool IsExpiringSoon(MemberShipModel membership)
+        {
+            var days = DaysRemaining(membership);
+            return membership.Status != "Expired" && days is >= 0 and <= 7;
+        }
+
+        private Color GetStatusColor(string status)
+        {
+            return status switch
+            {
+                "Active" => Color.Success,
+                "Pending" => Color.Warning,
+                _ => Color.Default
+            };
         }
 
         private void Cancel()
@@ -139,7 +200,7 @@ namespace GMMS.App.Feature.Membership
                 {
                     errorMessage = result?.Message ?? "Failed to create membership.";
                 }
-            } 
+            }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;

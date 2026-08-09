@@ -1,6 +1,6 @@
 @using MudBlazor
 
-<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
     <TitleContent>
         <MudText Typo="Typo.h6" Class="gmm-ms__edit-title">
             <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" Color="Color.Primary" /> Edit Membership
@@ -77,7 +77,7 @@
                     </div>
                     <div class="gmm-ms__edit-plan-row">
                         <span class="mud-text-secondary">
-                            <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" Class="mr-1" />New End Date
+                            <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" Class="mr-1" />End Date
                         </span>
                         <strong class="gmm-ms__edit-plan-end">@(newEndDate?.ToString("yyyy-MM-dd") ?? "—")</strong>
                     </div>
@@ -91,10 +91,11 @@
                               Variant="Variant.Outlined" ReadOnly="true"
                               Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CalendarToday"
                               Class="gmm-field-date" />
-                <MudTextField Value="@(newEndDate?.ToString("yyyy-MM-dd") ?? "—")" Label="New End Date (auto-calculated)"
+                <MudTextField Value="@(newEndDate?.ToString("yyyy-MM-dd") ?? "—")" Label="End Date"
                               Variant="Variant.Outlined" ReadOnly="true"
                               Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Event"
-                              Class="gmm-field-date" />
+                              Class="gmm-field-date"
+                              HelperText="Auto-calculated from the selected plan." />
             </div>
 
             <div class="gmm-ms__edit-status">
@@ -103,6 +104,32 @@
                     @detail.Status
                 </MudChip>
             </div>
+
+            @if (AuthTokenStore.CurrentUser?.Role == AuthTokenStore.RoleOwner)
+            {
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.subtitle2" Class="mb-2 gmm-ms__edit-label">Timestamps</MudText>
+
+                <MudTextField Value="@detail.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
+
+                <MudTextField Value="@(string.IsNullOrEmpty(detail.CreatedByUser) ? "-" : detail.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
+
+                @if (detail.UpdatedAt is not null || !string.IsNullOrEmpty(detail.UpdatedByUser))
+                {
+                    <MudTextField Value="@(detail.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")" Label="Updated At" Variant="Variant.Outlined"
+                                  ReadOnly="true" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
+
+                    <MudTextField Value="@(string.IsNullOrEmpty(detail.UpdatedByUser) ? "-" : detail.UpdatedByUser)" Label="Updated By" Variant="Variant.Outlined"
+                                  ReadOnly="true" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
+                }
+            }
         }
     </DialogContent>
 

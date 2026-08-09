@@ -132,7 +132,6 @@ namespace GMMS.App.Feature.Membership
             {
                 "Active" => Color.Success,
                 "Pending" => Color.Warning,
-                "Expired" => Color.Error,
                 _ => Color.Default
             };
         }
@@ -152,6 +151,7 @@ namespace GMMS.App.Feature.Membership
 
         private string? GetEndNote(MemberShipModel membership)
         {
+            if (membership.Status == "Expired") return null;
             var days = DaysRemaining(membership);
             if (days < 0)
             {
@@ -173,6 +173,7 @@ namespace GMMS.App.Feature.Membership
 
         private string GetEndIcon(MemberShipModel membership)
         {
+            if (membership.Status == "Expired") return Icons.Material.Filled.EventAvailable;
             if (IsExpiringSoon(membership)) return Icons.Material.Filled.WarningAmber;
             if (DaysRemaining(membership) < 0) return Icons.Material.Filled.Error;
             return Icons.Material.Filled.EventAvailable;
@@ -180,6 +181,7 @@ namespace GMMS.App.Feature.Membership
 
         private string GetEndIconClass(MemberShipModel membership)
         {
+            if (membership.Status == "Expired") return "gmm-ms__icon-ok";
             if (IsExpiringSoon(membership)) return "gmm-ms__icon-warn";
             if (DaysRemaining(membership) < 0) return "gmm-ms__icon-error";
             return "gmm-ms__icon-ok";

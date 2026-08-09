@@ -20,37 +20,56 @@ namespace GMMS.App.Feature.User
         [Inject]
         private ISnackbar Snackbar { get; set; } = null!;
 
+        [Inject]
+        private AuthTokenStore AuthTokenStore { get; set; } = null!;
+
+        private UserModel? user;
         private UpdateUserRequestModel request = new();
-        private bool isLoading = true;
+        private bool isLoading;
+        private bool loadFailed;
         private bool isSaving;
         private string? errorMessage;
 
         protected override async Task OnInitializedAsync()
         {
+            await LoadAsync();
+        }
+
+        private async Task LoadAsync()
+        {
+            isLoading = true;
+            loadFailed = false;
+            errorMessage = null;
+
             try
             {
                 var result = await ApiService.GetUserDetailsAsync<Result<UserModel>>(UserId);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
-                    request.UserId = result.Data.UserId;
-                    request.UserName = result.Data.UserName;
-                    request.Role = result.Data.Role;
-                    request.IsActive = result.Data.IsActive;
+                    user = result.Data;
+                    request.UserId = user.UserId;
+                    request.UserName = user.UserName;
+                    request.Role = user.Role;
+                    request.IsActive = user.IsActive;
                 }
                 else
                 {
                     errorMessage = result?.Message ?? "User not found.";
+                    loadFailed = true;
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+                loadFailed = true;
             }
             finally
             {
                 isLoading = false;
             }
         }
+
+        private async Task RetryAsync() => await LoadAsync();
 
         private void Cancel()
         {

@@ -2,61 +2,80 @@
 
 <MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
     <TitleContent>
-        <MudText Typo="Typo.h6">
+        <MudText Typo="Typo.h6" Class="gmm-ms__detail-title">
             <MudIcon Icon="@Icons.Material.Filled.CardMembership" Class="mr-3" Color="Color.Primary" /> Membership Details
         </MudText>
     </TitleContent>
 
     <DialogContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
+        }
+
         @if (isLoading)
         {
-            <div class="d-flex justify-center pa-6">
-                <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <div class="d-flex flex-column gmm-ms__detail-skeleton">
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
+                <MudSkeleton Height="56px" />
             </div>
         }
-        else if (!string.IsNullOrEmpty(errorMessage))
+        else if (loadFailed)
         {
-            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            <div class="d-flex flex-column align-center pa-4">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3" Style="text-align: center;">
+                    We couldn't load this membership. Check your connection, then try again.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RetryAsync"
+                           StartIcon="@Icons.Material.Filled.Refresh">
+                    Try Again
+                </MudButton>
+            </div>
         }
         else if (detail is not null)
         {
-            <MudTextField Value="@detail.MemberName" Label="Member" Variant="Variant.Outlined"
-                          ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Person" Class="mb-3" />
-
-            <MudTextField Value="@detail.MemberCode" Label="Member Code" Variant="Variant.Outlined"
-                          ReadOnly="true" Class="mb-3" />
-
-            <MudTextField Value="@detail.PlanName" Label="Plan" Variant="Variant.Outlined"
-                          ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Subscriptions" Class="mb-3" />
-
-            <MudTextField Value="@detail.PlanCode" Label="Plan Code" Variant="Variant.Outlined"
-                          ReadOnly="true" Class="mb-3" />
-
-            <div class="d-flex flex-wrap gap-4 mb-3">
-                <MudTextField Value="@detail.StartDate.ToString("yyyy-MM-dd")" Label="Start Date" Variant="Variant.Outlined"
+            <div class="d-flex flex-wrap align-center mb-3" style="gap: 12px;">
+                <MudTextField Value="@detail.MemberName" Label="Member" Variant="Variant.Outlined"
                               ReadOnly="true" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.CalendarToday" Style="flex: 1;" />
-
-                <MudTextField Value="@detail.EndDate.ToString("yyyy-MM-dd")" Label="End Date" Variant="Variant.Outlined"
-                              ReadOnly="true" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.CalendarToday" Style="flex: 1;" />
+                              AdornmentIcon="@Icons.Material.Filled.Person" Class="gmm-field-constrained" />
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="gmm-ms__detail-code">@detail.MemberCode</MudChip>
             </div>
 
-            <MudTextField Value="@detail.Status" Label="Status" Variant="Variant.Outlined"
-                          ReadOnly="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Flag" Class="mb-3" />
+            <div class="d-flex flex-wrap align-center mb-3" style="gap: 12px;">
+                <MudTextField Value="@detail.PlanName" Label="Plan" Variant="Variant.Outlined"
+                              ReadOnly="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Subscriptions" Class="gmm-field-constrained" />
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="gmm-ms__detail-code">@detail.PlanCode</MudChip>
+            </div>
+
+            <div class="d-flex flex-wrap mb-3" style="gap: 12px;">
+                <MudTextField Value="@detail.StartDate.ToString("yyyy-MM-dd")" Label="Start Date"
+                              Variant="Variant.Outlined" ReadOnly="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CalendarToday"
+                              Class="gmm-field-date" />
+                <MudTextField Value="@detail.EndDate.ToString("yyyy-MM-dd")" Label="End Date"
+                              Variant="Variant.Outlined" ReadOnly="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.EventAvailable"
+                              Class="gmm-field-date" />
+            </div>
+
+            <div class="mb-4">
+                <MudText Typo="Typo.body2" Class="mb-1 gmm-ms__detail-label">Status</MudText>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@GetStatusColor(detail.Status)" Class="gmm-ms__detail-chip">
+                    @detail.Status
+                </MudChip>
+            </div>
 
             <MudDivider Class="my-3" />
 
-            <MudText Typo="Typo.subtitle2" Class="mb-2">Timestamps</MudText>
+            <MudText Typo="Typo.subtitle2" Class="mb-2 gmm-ms__detail-label">Timestamps</MudText>
 
             <MudTextField Value="@detail.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
                           ReadOnly="true" Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 
-            @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+            @if (AuthTokenStore.CurrentUser?.Role == AuthTokenStore.RoleOwner)
             {
                 <MudTextField Value="@(string.IsNullOrEmpty(detail.CreatedByUser) ? "-" : detail.CreatedByUser)" Label="Created By" Variant="Variant.Outlined"
                               ReadOnly="true" Adornment="Adornment.Start"
@@ -77,6 +96,47 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel" Variant="Variant.Filled" Color="Color.Primary">Close</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Close</MudButton>
     </DialogActions>
 </MudDialog>
+
+<style>
+    .gmm-ms__detail-title {
+        font-weight: 700 !important;
+    }
+
+    .gmm-ms__detail-label {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .gmm-ms__detail-skeleton {
+        gap: 16px;
+    }
+
+    .gmm-ms__detail-code.mud-chip {
+        background-color: var(--mud-palette-background-grey);
+        color: var(--mud-palette-text-primary);
+        border-left: 3px solid #60A5FA;
+        border-radius: 6px;
+        font-family: 'Cascadia Mono', 'Consolas', monospace;
+        letter-spacing: .3px;
+    }
+
+    .gmm-ms__detail-chip {
+        border-radius: 6px;
+    }
+
+    .gmm-field-constrained {
+        flex: 0 1 320px !important;
+        min-width: 200px !important;
+        max-width: 320px !important;
+        width: auto !important;
+    }
+
+    .gmm-field-date {
+        flex: 0 0 180px !important;
+        max-width: 180px !important;
+        min-width: 160px !important;
+        width: auto !important;
+    }
+</style>
