@@ -4,6 +4,23 @@ html, body {
     overflow: hidden;
 }
 
+/* Keep the dark theme when the browser autofills inputs (Chrome/Edge paint
+   them white on touch focus, making text invisible on dark surfaces). */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--mud-palette-text-primary) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--mud-palette-surface) inset !important;
+    caret-color: var(--mud-palette-text-primary);
+    transition: background-color 9999s ease-in-out 0s;
+}
+
 .mud-main-content {
     height: calc(100vh - 64px);
     overflow-y: auto;

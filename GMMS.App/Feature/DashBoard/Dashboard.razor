@@ -66,30 +66,30 @@
             </div>
         </div>
 
-        <MudGrid>
-            <MudItem xs="12">
+        <MudGrid Class="gmm-dash__grid-tight">
+            <MudItem xs="12" md="4">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
-                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Member Growth</MudText>
-                    <MudText Typo="Typo.body2" Class="gmm-dash__card-subtitle">Total members over the last 6 months</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_memberGrowthOptions" Height="220">
+                    <MudText Typo="Typo.subtitle1" Class="gmm-dash__card-title">Member Growth</MudText>
+                    <MudText Typo="Typo.caption" Class="gmm-dash__card-subtitle">Total members over the last 6 months</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_memberGrowthOptions" Height="140">
                         <ApexPointSeries TItem="ChartPoint" Items="_memberGrowthPoints" Name="Total Members"
                                          SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
                 </MudPaper>
             </MudItem>
-            <MudItem xs="12" md="6">
+            <MudItem xs="12" md="4">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
-                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Monthly Revenue Trend</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_revenueTrendOptions" Height="180">
+                    <MudText Typo="Typo.subtitle1" Class="gmm-dash__card-title">Monthly Revenue Trend</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_revenueTrendOptions" Height="110">
                         <ApexPointSeries TItem="ChartPoint" Items="_revenueTrendPoints" Name="Revenue"
                                          SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
                 </MudPaper>
             </MudItem>
-            <MudItem xs="12" md="6">
+            <MudItem xs="12" md="4">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
-                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Most Used Plans</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_planUsageOptions" Height="180">
+                    <MudText Typo="Typo.subtitle1" Class="gmm-dash__card-title">Most Used Plans</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_planUsageOptions" Height="110">
                         <ApexPointSeries TItem="ChartPoint" Items="_planUsagePoints" Name="Members"
                                          SeriesType="SeriesType.Bar" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
@@ -116,7 +116,6 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 4px;
     }
 
     .gmm-dash__title {
@@ -133,14 +132,14 @@
         display: flex;
         flex-wrap: wrap;
         gap: 16px;
-        margin: 12px 0;
+        margin: 4px 0;
     }
 
     .gmm-dash__stat {
         display: inline-flex;
         align-items: center;
         gap: 12px;
-        padding: 10px 16px;
+        padding: 6px 10px;
         border-radius: 12px;
         border: 1px solid var(--mud-palette-lines-default);
         background-color: var(--mud-palette-surface);
@@ -179,7 +178,7 @@
 
     .gmm-dash__card {
         border-radius: 12px;
-        padding: 12px 12px 4px;
+        padding: 8px 8px 0;
         height: 100%;
     }
 
@@ -191,6 +190,10 @@
     .gmm-dash__card-subtitle {
         color: var(--mud-palette-text-secondary);
         margin-bottom: 8px;
+    }
+
+    .gmm-dash__grid-tight {
+        gap: 8px !important;
     }
 
     .gmm-dash__chart-skeleton {
