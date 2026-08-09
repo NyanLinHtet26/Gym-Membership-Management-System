@@ -152,7 +152,7 @@ namespace GMMS.App.Feature.Membership
 
         private int DaysRemaining(MemberShipModel membership)
         {
-            return (membership.EndDate.ToDateTime(TimeOnly.MinValue) - DateTime.Today).Days;
+            return (membership.EndDate.ToDateTime(TimeOnly.MinValue) - MyanmarDateTimeFormatter.TodayMyanmarDateOnly.ToDateTime(TimeOnly.MinValue)).Days;
         }
 
         private bool IsExpiringSoon(MemberShipModel membership)

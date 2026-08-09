@@ -1,4 +1,5 @@
 @using MudBlazor
+@using GMMS.App.Services
 
 <MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
     <TitleContent>
@@ -55,7 +56,7 @@
                 {
                     @foreach (var p in plans)
                     {
-                        <MudSelectItem Value="@(p.MemberShipPlanId)">@p.PlanName (@p.DurationDays days - @p.Price.ToString("C2"))</MudSelectItem>
+                        <MudSelectItem Value="@(p.MemberShipPlanId)">@p.PlanName (@p.DurationDays days - @CurrencyFormatter.FormatMMK(p.Price))</MudSelectItem>
                     }
                 }
             </MudSelect>
@@ -73,7 +74,7 @@
                         <span class="mud-text-secondary">
                             <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" Class="mr-1" />Price
                         </span>
-                        <strong>@SelectedPlan.Price.ToString("C2")</strong>
+                        <strong>@CurrencyFormatter.FormatMMK(SelectedPlan.Price)</strong>
                     </div>
                     <div class="gmm-ms__edit-plan-row">
                         <span class="mud-text-secondary">
@@ -111,7 +112,7 @@
 
                 <MudText Typo="Typo.subtitle2" Class="mb-2 gmm-ms__edit-label">Timestamps</MudText>
 
-                <MudTextField Value="@detail.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
+                <MudTextField Value="@detail.CreatedAt.FormatMmtDateTime()" Label="Created At" Variant="Variant.Outlined"
                               ReadOnly="true" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 
@@ -121,7 +122,7 @@
 
                 @if (detail.UpdatedAt is not null || !string.IsNullOrEmpty(detail.UpdatedByUser))
                 {
-                    <MudTextField Value="@(detail.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")" Label="Updated At" Variant="Variant.Outlined"
+                    <MudTextField Value="@detail.UpdatedAt.FormatMmtDateTime()" Label="Updated At" Variant="Variant.Outlined"
                                   ReadOnly="true" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 

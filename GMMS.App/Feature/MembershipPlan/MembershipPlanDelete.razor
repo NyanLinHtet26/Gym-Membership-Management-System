@@ -1,4 +1,5 @@
 @using MudBlazor
+@using GMMS.App.Services
 
 <MudDialog>
     <TitleContent>
@@ -25,7 +26,7 @@
             <MudText Typo="Typo.body1" Class="mb-2"><strong>Plan Name:</strong> @plan.PlanName</MudText>
             <MudText Typo="Typo.body1" Class="mb-2"><strong>Description:</strong> @plan.Description</MudText>
             <MudText Typo="Typo.body1" Class="mb-2"><strong>Duration:</strong> @plan.DurationDays days</MudText>
-            <MudText Typo="Typo.body1" Class="mb-4"><strong>Price:</strong> @plan.Price.ToString("C2")</MudText>
+            <MudText Typo="Typo.body1" Class="mb-4"><strong>Price:</strong> @CurrencyFormatter.FormatMMK(plan.Price)</MudText>
 
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
                 Are you sure you want to delete this membership plan?

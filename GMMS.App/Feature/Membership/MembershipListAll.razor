@@ -1,4 +1,5 @@
 @page "/membership-list-all"
+@using GMMS.App.Components.Common
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <div class="gmm-ms__head">
@@ -96,14 +97,16 @@
                     <MudTd DataLabel="#" Style="color: var(--mud-palette-text-secondary);">@context.MembershipId</MudTd>
                     <MudTd DataLabel="Member">
                         <div class="d-flex align-center flex-wrap" style="gap: 8px;">
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="gmm-ms__code">@context.MemberCode</MudChip>
-                            <strong>@context.MemberName</strong>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Class="gmm-ms__code">
+                                <TruncatedText Text="@context.MemberCode" MaxLength="20" MaxWidth="140px" />
+                            </MudChip>
+                            <strong><TruncatedText Text="@context.MemberName" MaxLength="30" MaxWidth="180px" /></strong>
                         </div>
                     </MudTd>
                     <MudTd DataLabel="Plan">
                         <div class="d-flex flex-column">
-                            <span>@context.PlanName</span>
-                            <small class="mud-text-secondary">@context.PlanCode</small>
+                            <span><TruncatedText Text="@context.PlanName" MaxLength="35" MaxWidth="220px" /></span>
+                            <small class="mud-text-secondary"><TruncatedText Text="@context.PlanCode" MaxLength="20" MaxWidth="200px" /></small>
                         </div>
                     </MudTd>
                     <MudTd DataLabel="Start Date" Style="color: var(--mud-palette-text-secondary); white-space: nowrap;">

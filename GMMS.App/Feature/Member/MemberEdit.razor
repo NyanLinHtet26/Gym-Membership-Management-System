@@ -63,7 +63,7 @@
 
                 <MudText Typo="Typo.subtitle2" Class="mb-2 gmm-member__edit-label">Timestamps</MudText>
 
-                <MudTextField Value="@member.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
+                <MudTextField Value="@member.CreatedAt.FormatMmtDateTime()" Label="Created At" Variant="Variant.Outlined"
                               ReadOnly="true" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 
@@ -73,7 +73,7 @@
 
                 @if (member.UpdatedAt is not null || !string.IsNullOrEmpty(member.UpdatedByUser))
                 {
-                    <MudTextField Value="@(member.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")" Label="Updated At" Variant="Variant.Outlined"
+                    <MudTextField Value="@member.UpdatedAt.FormatMmtDateTime()" Label="Updated At" Variant="Variant.Outlined"
                                   ReadOnly="true" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 

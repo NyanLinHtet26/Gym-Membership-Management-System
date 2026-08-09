@@ -1,4 +1,6 @@
 @namespace GMMS.App.Feature.MembershipPlan
+@using GMMS.App.Services
+@using GMMS.App.Components.Common
 
 <div class="d-flex flex-wrap justify-space-between align-start mb-4" style="gap: 16px;">
     <MudTextField @bind-Value="searchTerm" Placeholder="Search by code or name..." Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" Immediate="true" Style="width: 100%; max-width: 380px;" />
@@ -40,9 +42,9 @@ else if (plans is not null && plans.Count > 0)
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="#">@context.MemberShipPlanId</MudTd>
-            <MudTd DataLabel="Plan Code">@context.PlanCode</MudTd>
-            <MudTd DataLabel="Plan Name">@context.PlanName</MudTd>
-            <MudTd DataLabel="Price">@context.Price.ToString("C2")</MudTd>
+            <MudTd DataLabel="Plan Code"><TruncatedText Text="@context.PlanCode" MaxLength="20" MaxWidth="140px" /></MudTd>
+            <MudTd DataLabel="Plan Name"><TruncatedText Text="@context.PlanName" MaxLength="40" MaxWidth="240px" /></MudTd>
+            <MudTd DataLabel="Price">@CurrencyFormatter.FormatMMK(context.Price)</MudTd>
             <MudTd DataLabel="Duration (Days)">@context.DurationDays</MudTd>
             <MudTd DataLabel="Status">
                 <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)" Size="Size.Small">

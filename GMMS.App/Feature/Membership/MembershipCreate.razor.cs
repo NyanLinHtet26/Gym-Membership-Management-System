@@ -37,7 +37,7 @@ namespace GMMS.App.Feature.Membership
 
         private DateOnly? CalculatedEndDate
             => GetSelectedPlan() is { } plan
-                ? DateOnly.FromDateTime(DateTime.Today.AddDays(plan.DurationDays))
+                ? MyanmarDateTimeFormatter.TodayMyanmarDateOnly.AddDays(plan.DurationDays)
                 : null;
 
         private MemberShipPlanModel? GetSelectedPlan()
@@ -142,7 +142,7 @@ namespace GMMS.App.Feature.Membership
 
         private int DaysRemaining(MemberShipModel membership)
         {
-            return (membership.EndDate.ToDateTime(TimeOnly.MinValue) - DateTime.Today).Days;
+            return (membership.EndDate.ToDateTime(TimeOnly.MinValue) - MyanmarDateTimeFormatter.TodayMyanmarDateOnly.ToDateTime(TimeOnly.MinValue)).Days;
         }
 
         private bool IsExpiringSoon(MemberShipModel membership)

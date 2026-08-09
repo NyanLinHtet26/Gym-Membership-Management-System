@@ -42,7 +42,7 @@ namespace GMMS.App.Services
                         Date = DateOnly.FromDateTime(payment.CreatedAt),
                         Type = "Payment",
                         Title = $"Payment ({payment.Status})",
-                        Detail = $"{payment.Amount.ToString("C2")} via {payment.PaymentMethodName}",
+                        Detail = $"{CurrencyFormatter.FormatMMK(payment.Amount)} via {payment.PaymentMethodName}",
                         RefId = payment.PaymentId
                     });
                 }

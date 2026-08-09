@@ -1,10 +1,11 @@
 @page "/"
+@using GMMS.App.Services
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <div class="gmm-dash__head">
         <div>
             <MudText Typo="Typo.h4" Class="gmm-dash__title">Dashboard</MudText>
-            <MudText Typo="Typo.body2" Class="gmm-dash__subtitle">@DateTime.Today.ToString("dddd, MMMM d, yyyy")</MudText>
+            <MudText Typo="Typo.body2" Class="gmm-dash__subtitle">@MyanmarDateTimeFormatter.FormatMmtLongDateToday()</MudText>
         </div>
         <MudTooltip Text="Refresh data">
             <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="MudBlazor.Color.Primary"
@@ -79,7 +80,7 @@
                 </div>
                 <div class="gmm-dash__stat-body">
                     <MudText Typo="Typo.caption" Class="mud-text-secondary gmm-dash__stat-label">Today's Income</MudText>
-                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value">@_model.TodayIncome.ToString("C2")</MudText>
+                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value">@CurrencyFormatter.FormatMMK(_model.TodayIncome)</MudText>
                 </div>
             </div>
 
@@ -89,7 +90,7 @@
                 </div>
                 <div class="gmm-dash__stat-body">
                     <MudText Typo="Typo.caption" Class="mud-text-secondary gmm-dash__stat-label">Monthly Revenue</MudText>
-                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value">@_model.MonthlyRevenue.ToString("C2")</MudText>
+                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value">@CurrencyFormatter.FormatMMK(_model.MonthlyRevenue)</MudText>
                     @if (_revenueTrendPercent is { } pct)
                     {
                         <MudText Typo="Typo.caption" Class="@GetRevenueTrendClass()">

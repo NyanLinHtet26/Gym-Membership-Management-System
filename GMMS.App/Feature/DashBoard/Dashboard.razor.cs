@@ -159,6 +159,11 @@ namespace GMMS.App.Feature.DashBoard
                 Colors = [Violet],
                 Legend = new Legend { Show = false },
                 NoData = new NoData { Text = "No data available" },
+                Tooltip = new Tooltip
+                {
+                    Theme = Mode.Dark,
+                    Y = new TooltipY { Formatter = "function(val) { return Number(val).toLocaleString('en-US') + ' members'; }" }
+                },
                 Fill = new Fill
                 {
                     Type = new List<FillType> { FillType.Gradient },
@@ -190,6 +195,11 @@ namespace GMMS.App.Feature.DashBoard
                 Colors = [Blue],
                 Legend = new Legend { Show = false },
                 NoData = new NoData { Text = "No data available" },
+                Tooltip = new Tooltip
+                {
+                    Theme = Mode.Dark,
+                    Y = new TooltipY { Formatter = "function(val) { return 'Ks ' + Number(val).toLocaleString('en-US'); }" }
+                },
                 Fill = new Fill
                 {
                     Type = new List<FillType> { FillType.Gradient },
@@ -217,7 +227,7 @@ namespace GMMS.App.Feature.DashBoard
                     {
                         Labels = new YAxisLabels
                         {
-                            Formatter = "function(val) { return '$' + Number(val).toLocaleString('en-US'); }"
+                            Formatter = "function(val) { return 'Ks ' + Number(val).toLocaleString('en-US'); }"
                         }
                     }
                 ]
@@ -230,6 +240,11 @@ namespace GMMS.App.Feature.DashBoard
                 Colors = [Amber],
                 Legend = new Legend { Show = false },
                 NoData = new NoData { Text = "No data available" },
+                Tooltip = new Tooltip
+                {
+                    Theme = Mode.Dark,
+                    Y = new TooltipY { Formatter = "function(val) { return Number(val).toLocaleString('en-US') + ' members'; }" }
+                },
                 PlotOptions = new PlotOptions
                 {
                     Bar = new PlotOptionsBar { Horizontal = true }

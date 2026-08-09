@@ -1,4 +1,5 @@
 @using MudBlazor
+@using GMMS.App.Services
 
 <MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
     <TitleContent>
@@ -32,7 +33,7 @@
                         </div>
                         <MudDivider Class="mb-3" />
                         <div class="d-flex flex-wrap gap-4">
-                            <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Price: </MudText>@plan.Price.ToString("C2")</MudText>
+                            <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Price: </MudText>@CurrencyFormatter.FormatMMK(plan.Price)</MudText>
                             <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Duration: </MudText>@plan.DurationDays days</MudText>
                             <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Status: </MudText>
                                 <MudChip T="string" Color="@(plan.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
@@ -60,8 +61,8 @@
                     </MudCardHeader>
                     <MudCardContent>
                         <div class="d-flex flex-wrap gap-4">
-                            <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Created: </MudText>@plan.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudText>
-                            <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Updated: </MudText>@(plan.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "Never")</MudText>
+                            <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Created: </MudText>@plan.CreatedAt.FormatMmtDateTime()</MudText>
+                            <MudText Typo="Typo.body1"><MudText Typo="Typo.body2" Color="Color.Secondary">Updated: </MudText>@(plan.UpdatedAt.FormatMmtDateTime().Replace("-", "Never"))</MudText>
                         </div>
                     </MudCardContent>
                 </MudCard>

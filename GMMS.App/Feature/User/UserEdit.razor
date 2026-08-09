@@ -58,7 +58,8 @@
                 <MudSelectItem T="string" Value="@("Owner")">Owner</MudSelectItem>
             </MudSelect>
 
-            <MudCheckBox T="bool" @bind-Checked="request.IsActive"
+            <MudCheckBox T="bool"
+                         @bind-Value="request.IsActive"
                          Label="Active"
                          Class="mb-3" />
 
@@ -68,7 +69,7 @@
 
                 <MudText Typo="Typo.subtitle2" Class="mb-2 gmm-user__edit-label">Timestamps</MudText>
 
-                <MudTextField Value="@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined"
+                <MudTextField Value="@user.CreatedAt.FormatMmtDateTime()" Label="Created At" Variant="Variant.Outlined"
                               ReadOnly="true" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 
@@ -78,7 +79,7 @@
 
                 @if (user.UpdatedAt is not null || !string.IsNullOrEmpty(user.UpdatedByUser))
                 {
-                    <MudTextField Value="@(user.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")" Label="Updated At" Variant="Variant.Outlined"
+                    <MudTextField Value="@user.UpdatedAt.FormatMmtDateTime()" Label="Updated At" Variant="Variant.Outlined"
                                   ReadOnly="true" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-3" />
 

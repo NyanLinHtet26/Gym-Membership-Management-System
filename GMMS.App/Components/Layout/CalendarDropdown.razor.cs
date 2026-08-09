@@ -16,7 +16,7 @@ namespace GMMS.App.Components.Layout
 
         private static readonly string[] _weekDayLabels = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
-        private readonly DateOnly _today = DateOnly.FromDateTime(DateTime.Today);
+        private readonly DateOnly _today = MyanmarDateTimeFormatter.TodayMyanmarDateOnly;
 
         private int _year;
         private int _month;
@@ -37,7 +37,7 @@ namespace GMMS.App.Components.Layout
 
         protected override async Task OnInitializedAsync()
         {
-            var today = DateTime.Today;
+            var today = MyanmarDateTimeFormatter.TodayMyanmarDateTime;
             _year = today.Year;
             _month = today.Month;
             BuildGrid();

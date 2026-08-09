@@ -41,7 +41,7 @@
             <MudTextField Value="@member.MemberCode" Label="Member Code" Variant="Variant.Outlined" ReadOnly="true"
                           Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Badge" Class="mb-3" />
 
-            <MudTextField Value="@member.CreatedAt.ToString("yyyy-MM-dd HH:mm")" Label="Created At" Variant="Variant.Outlined" ReadOnly="true"
+            <MudTextField Value="@member.CreatedAt.FormatMmtDateTime()" Label="Created At" Variant="Variant.Outlined" ReadOnly="true"
                           Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CalendarToday" Class="mb-4" />
 
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">

@@ -1,4 +1,6 @@
 @page "/payment-list"
+@using GMMS.App.Services
+@using GMMS.App.Components.Common
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <div class="gmm-pay__head">
@@ -6,13 +8,13 @@
             <MudText Typo="Typo.h4" Class="gmm-pay__title">Payments</MudText>
             <MudText Typo="Typo.body2" Class="gmm-pay__subtitle">Track incoming payments, amounts and their status.</MudText>
         </div>
-        @if (AuthTokenStore.CurrentUser?.Role == "Admin")
+        @* @if (AuthTokenStore.CurrentUser?.Role == "Admin")
         {
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="gmm-pay__add"
                        OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.AddCard">
                 Record Payment
             </MudButton>
-        }
+        } *@
     </div>
 
     <div class="gmm-pay__stats">
@@ -104,10 +106,10 @@
                     <MudTd DataLabel="Payment Method">
                         <div class="d-flex align-center">
                             <MudIcon Icon="@Icons.Material.Filled.Wallet" Size="Size.Small" Class="mr-1 gmm-pay__method-icon" />
-                            <strong>@context.PaymentMethodName</strong>
+                            <strong><TruncatedText Text="@context.PaymentMethodName" MaxLength="30" MaxWidth="200px" /></strong>
                         </div>
                     </MudTd>
-                    <MudTd DataLabel="Amount" Style="font-weight: 600;">@context.Amount.ToString("C2")</MudTd>
+                    <MudTd DataLabel="Amount" Style="font-weight: 600;">@CurrencyFormatter.FormatMMK(context.Amount)</MudTd>
                     <MudTd DataLabel="Status">
                         <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
                                  Color="@GetStatusColor(context.Status)" Class="gmm-pay__chip">
@@ -117,7 +119,7 @@
                     <MudTd DataLabel="Created At" Style="color: var(--mud-palette-text-secondary); white-space: nowrap;">
                         <div class="d-flex align-center">
                             <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Class="mr-1 gmm-pay__date-icon" />
-                            <span>@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                            <span>@context.CreatedAt.FormatMmtDateTime()</span>
                         </div>
                     </MudTd>
                     @if (AuthTokenStore.CurrentUser?.Role == "Owner")

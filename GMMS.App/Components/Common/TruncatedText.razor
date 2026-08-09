@@ -1,0 +1,15 @@
+@namespace GMMS.App.Components.Common
+<MudTooltip Text="@FullText" Placement="Placement.Top" Delay="200">
+    <span class="gmm-truncated-text" style="max-width: @MaxWidthCss; display: inline-block; vertical-align: middle;">
+        @DisplayText
+    </span>
+</MudTooltip>
+
+<style>
+    .gmm-truncated-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.35;
+    }
+</style>

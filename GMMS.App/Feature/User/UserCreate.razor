@@ -31,7 +31,8 @@
                       Class="mb-3"
                       HelperText="Min 6 chars, must contain upper, lower, digit, and special char" />
 
-        <MudCheckBox T="bool" @bind-Checked="request.IsActive"
+        <MudCheckBox T="bool"
+                     @bind-Value="request.IsActive"
                      Label="Active"
                      Class="mb-3" />
     </DialogContent>
