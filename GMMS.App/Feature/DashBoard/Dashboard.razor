@@ -71,7 +71,7 @@
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
                     <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Member Growth</MudText>
                     <MudText Typo="Typo.body2" Class="gmm-dash__card-subtitle">Total members over the last 6 months</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_memberGrowthOptions" Height="320">
+                    <ApexChart TItem="ChartPoint" Options="_memberGrowthOptions" Height="220">
                         <ApexPointSeries TItem="ChartPoint" Items="_memberGrowthPoints" Name="Total Members"
                                          SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
@@ -80,7 +80,7 @@
             <MudItem xs="12" md="6">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
                     <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Monthly Revenue Trend</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_revenueTrendOptions" Height="300">
+                    <ApexChart TItem="ChartPoint" Options="_revenueTrendOptions" Height="180">
                         <ApexPointSeries TItem="ChartPoint" Items="_revenueTrendPoints" Name="Revenue"
                                          SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
@@ -89,7 +89,7 @@
             <MudItem xs="12" md="6">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
                     <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Most Used Plans</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_planUsageOptions" Height="300">
+                    <ApexChart TItem="ChartPoint" Options="_planUsageOptions" Height="180">
                         <ApexPointSeries TItem="ChartPoint" Items="_planUsagePoints" Name="Members"
                                          SeriesType="SeriesType.Bar" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
@@ -116,7 +116,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
     }
 
     .gmm-dash__title {
@@ -133,14 +133,14 @@
         display: flex;
         flex-wrap: wrap;
         gap: 16px;
-        margin: 20px 0;
+        margin: 12px 0;
     }
 
     .gmm-dash__stat {
         display: inline-flex;
         align-items: center;
         gap: 12px;
-        padding: 14px 20px;
+        padding: 10px 16px;
         border-radius: 12px;
         border: 1px solid var(--mud-palette-lines-default);
         background-color: var(--mud-palette-surface);
@@ -179,7 +179,7 @@
 
     .gmm-dash__card {
         border-radius: 12px;
-        padding: 16px 16px 8px;
+        padding: 12px 12px 4px;
         height: 100%;
     }
 
