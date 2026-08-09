@@ -1,12 +1,12 @@
 using GMMS.App.Services;
 using GMMS.Domain;
-using GMMS.Domain.Features.MemberShipPlan.Models;
+using GMMS.Domain.Features.PaymentMethod.Models;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace GMMS.App.Feature.MembershipPlan
+namespace GMMS.App.Feature.PaymentMethod
 {
-    public partial class MembershipPlanList : ComponentBase, IDisposable
+    public partial class PaymentMethodManager : ComponentBase, IDisposable
     {
         [Inject]
         private ApiService ApiService { get; set; } = null!;
@@ -17,10 +17,7 @@ namespace GMMS.App.Feature.MembershipPlan
         [Inject]
         private AuthTokenStore AuthTokenStore { get; set; } = null!;
 
-        [SupplyParameterFromQuery(Name = "page")]
-        public int Page { get; set; } = 1;
-
-        private List<MemberShipPlanModel>? plans;
+        private List<PaymentMethodModel>? methods;
         private int pageNumber = 1;
         private int pageSize = 10;
         private int totalCount;
@@ -63,14 +60,9 @@ namespace GMMS.App.Feature.MembershipPlan
             }
         }
 
-        protected override async Task OnParametersSetAsync()
+        protected override async Task OnInitializedAsync()
         {
-            if (Page < 1) Page = 1;
-            _pageSelected = Page;
-            if (plans is null || Page != pageNumber)
-            {
-                await LoadPage(Page);
-            }
+            await LoadPage(1);
         }
 
         private async Task PageChanged(int page)
@@ -91,17 +83,17 @@ namespace GMMS.App.Feature.MembershipPlan
 
             try
             {
-                var result = await ApiService.GetMembershipPlanListAsync<Result<MemberShipPlanListResponseModel>>(pageNumber, pageSize, _searchTerm);
+                var result = await ApiService.GetPaymentMethodListAsync<Result<PaymentMethodListResponseModel>>(pageNumber, pageSize, _searchTerm);
                 if (result?.IsSuccess == true && result.Data is not null)
                 {
-                    plans = result.Data.MemberShipPlans;
+                    methods = result.Data.PaymentMethods;
                     totalCount = result.Data.TotalCount;
                     totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
                     if (totalPages < 1) totalPages = 1;
                 }
                 else
                 {
-                    errorMessage = result?.Message ?? "Failed to load membership plans.";
+                    errorMessage = result?.Message ?? "Failed to load payment methods.";
                 }
             }
             catch (Exception ex)
@@ -116,7 +108,7 @@ namespace GMMS.App.Feature.MembershipPlan
 
         private async Task OpenCreateDialog()
         {
-            var dialog = await DialogService.ShowAsync<MembershipPlanCreate>("Create Membership Plan");
+            var dialog = await DialogService.ShowAsync<PaymentMethodCreate>("Create Payment Method");
             var result = await dialog.Result;
 
             if (result is not null && !result.Canceled)
@@ -125,10 +117,10 @@ namespace GMMS.App.Feature.MembershipPlan
             }
         }
 
-        private async Task OpenEditDialog(int planId)
+        private async Task OpenEditDialog(int paymentMethodId)
         {
-            var parameters = new DialogParameters<MembershipPlanEdit> { { x => x.PlanId, planId } };
-            var dialog = await DialogService.ShowAsync<MembershipPlanEdit>("Edit Membership Plan", parameters);
+            var parameters = new DialogParameters<PaymentMethodEdit> { { x => x.PaymentMethodId, paymentMethodId } };
+            var dialog = await DialogService.ShowAsync<PaymentMethodEdit>("Edit Payment Method", parameters);
             var result = await dialog.Result;
 
             if (result is not null && !result.Canceled)
@@ -137,22 +129,16 @@ namespace GMMS.App.Feature.MembershipPlan
             }
         }
 
-        private async Task OpenDeleteDialog(int planId)
+        private async Task OpenDeleteDialog(int paymentMethodId)
         {
-            var parameters = new DialogParameters<MembershipPlanDelete> { { x => x.PlanId, planId } };
-            var dialog = await DialogService.ShowAsync<MembershipPlanDelete>("Delete Membership Plan", parameters);
+            var parameters = new DialogParameters<PaymentMethodDelete> { { x => x.PaymentMethodId, paymentMethodId } };
+            var dialog = await DialogService.ShowAsync<PaymentMethodDelete>("Delete Payment Method", parameters);
             var result = await dialog.Result;
 
             if (result is not null && !result.Canceled)
             {
                 await LoadPage(pageNumber);
             }
-        }
-
-        private async Task OpenDetailDialog(int planId)
-        {
-            var parameters = new DialogParameters<MembershipPlanDetail> { { x => x.PlanId, planId } };
-            await DialogService.ShowAsync<MembershipPlanDetail>("Plan Details", parameters);
         }
 
         public void Dispose()

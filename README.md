@@ -94,11 +94,10 @@ PaymentMethod (1) ───────── (Many) Payment
 | **Member List** | `/member-list` | Page + Dialogs | Search, Pagination, Create/Edit/Delete Dialogs |
 | **All Memberships** | `/membership-list-all` | Page + Dialogs | Status Filter, Search, Pagination |
 | **Member Memberships** | `/membership-list?memberId=X` | Page + Dialogs | Filtered by Member |
-| **Membership Plans** | `/membershipplan-list` | Page + Dialogs | Create/Edit/Delete Dialogs |
-| **Payment Methods** | `/paymentmethod-list` | Page + Dialogs | Create/Edit/Delete Dialogs |
 | **Payments** | `/payment-list` | Page + Dialog | List + Create Dialog + Detail Dialog |
+| **Settings** | `/settings` | Page + Tabs | Profile + Membership Plans & Payment Methods (Create/Edit/Delete Dialogs) |
 
-**Navigation**: Sidebar with Members → All Memberships → Plans → Payment Methods → Payments
+**Navigation**: Sidebar with Members → All Memberships → Payments; Settings via account menu (Owner only)
 
 ---
 

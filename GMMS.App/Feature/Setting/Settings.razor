@@ -1,0 +1,86 @@
+@page "/settings"
+@using GMMS.App.Feature.MembershipPlan
+@using GMMS.App.Feature.PaymentMethod
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <div class="gmm-settings__head">
+        <div>
+            <MudText Typo="Typo.h4" Class="gmm-settings__title">Settings</MudText>
+            <MudText Typo="Typo.body2" Class="gmm-settings__subtitle">Manage your account and gym configuration.</MudText>
+        </div>
+    </div>
+
+    <MudPaper Elevation="0" Outlined="true" Class="gmm-settings__profile mb-4">
+        <MudAvatar Size="Size.Medium" Style="background-color:#6D28D9; color:#fff; font-weight:600;">@Initial</MudAvatar>
+        <div>
+            <MudText Typo="Typo.h6" Class="gmm-settings__profile-name">@AuthTokenStore.CurrentUser?.UserName</MudText>
+            <MudText Typo="Typo.caption" Class="gmm-settings__profile-role">@RoleLabel</MudText>
+        </div>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                   OnClick="GoToChangePassword" StartIcon="@Icons.Material.Filled.LockReset">
+            Change Password
+        </MudButton>
+    </MudPaper>
+
+    <MudTabs Elevation="0" Outlined="true" Rounded="true" Class="gmm-settings__tabs" PanelClass="gmm-settings__panel">
+        <MudTabPanel Text="Membership Plans" Icon="@Icons.Material.Filled.Book">
+            <MembershipPlanManager />
+        </MudTabPanel>
+        <MudTabPanel Text="Payment Methods" Icon="@Icons.Material.Filled.Wallet">
+            <PaymentMethodManager />
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+<style>
+    .gmm-settings__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+
+    .gmm-settings__title {
+        font-weight: 700 !important;
+        text-wrap: balance;
+    }
+
+    .gmm-settings__subtitle {
+        color: var(--mud-palette-text-secondary);
+        text-wrap: pretty;
+    }
+
+    .gmm-settings__profile {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-top: 20px;
+    }
+
+    .gmm-settings__profile-name {
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .gmm-settings__profile-role {
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        color: #6D28D9;
+        font-weight: 600;
+    }
+
+    .gmm-settings__tabs {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .gmm-settings__panel {
+        padding: 20px;
+    }
+</style>

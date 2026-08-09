@@ -43,14 +43,12 @@ namespace GMMS.App.Services
                 case "/membership-list":
                 case "/membership-list-all":
                     return "Memberships";
-                case "/membershipplan-list":
-                    return "Membership Plans";
-                case "/paymentmethod-list":
-                    return "Payment Methods";
                 case "/payment-list":
                     return "Payments";
                 case "/user-list":
                     return "Users";
+                case "/settings":
+                    return "Settings";
                 case "/change-password":
                     return "Change Password";
                 case "/login":

@@ -1,0 +1,68 @@
+@namespace GMMS.App.Feature.PaymentMethod
+
+<div class="d-flex flex-wrap justify-space-between align-start mb-4" style="gap: 16px;">
+    <MudTextField @bind-Value="searchTerm" Placeholder="Search by code or name..." Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" Immediate="true" Style="width: 100%; max-width: 380px;" />
+
+    <div class="d-flex flex-wrap align-center" style="gap: 12px;">
+        <MudText Typo="Typo.body2" Class="d-flex align-center">
+            Total: <strong class="ml-2 mud-primary-text">@totalCount</strong>
+        </MudText>
+        @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small">
+                Create Payment Method
+            </MudButton>
+        }
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="d-flex justify-center pa-12">
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (errorMessage is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mt-4">@errorMessage</MudAlert>
+}
+else if (methods is not null && methods.Count > 0)
+{
+    <MudTable Items="methods" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm" Elevation="1" Class="rounded">
+        <HeaderContent>
+            <MudTh>#</MudTh>
+            <MudTh>Payment Method Code</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Active</MudTh>
+            @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+            {
+                <MudTh Style="text-align: center;">Actions</MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="#">@context.PaymentMethodId</MudTd>
+            <MudTd DataLabel="Payment Method Code">@context.PaymentMethodCode</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Active">
+                <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
+                    @(context.IsActive ? "Yes" : "No")
+                </MudChip>
+            </MudTd>
+            @if (AuthTokenStore.CurrentUser?.Role == "Owner")
+            {
+                <MudTd DataLabel="Actions" Style="text-align: center;">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context.PaymentMethodId))" Size="Size.Small" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context.PaymentMethodId))" Size="Size.Small" />
+                </MudTd>
+            }
+        </RowTemplate>
+    </MudTable>
+
+    <div class="d-flex flex-column align-center mt-6">
+        <MudPagination BoundaryCount="1" MiddleCount="1" Count="@totalPages" Selected="@_pageSelected" SelectedChanged="PageChanged" />
+    </div>
+}
+else
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">No payment methods found.</MudAlert>
+}
