@@ -6,30 +6,36 @@
             <MudText Typo="Typo.h4" Class="gmm-dash__title">Dashboard</MudText>
             <MudText Typo="Typo.body2" Class="gmm-dash__subtitle">@DateTime.Today.ToString("dddd, MMMM d, yyyy")</MudText>
         </div>
+        <MudTooltip Text="Refresh data">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="MudBlazor.Color.Primary"
+                           OnClick="RetryAsync" Class="gmm-dash__refresh" aria-label="Refresh dashboard data" />
+        </MudTooltip>
     </div>
 
     @if (_isLoading)
     {
         <div class="gmm-dash__stats">
-            <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__stat gmm-dash__stat--skeleton">
-                <MudSkeleton Type="SkeletonType.Circle" Width="34px" Height="34px" />
-                <div>
-                    <MudSkeleton Type="SkeletonType.Text" Width="130px" Height="24px" />
-                    <MudSkeleton Type="SkeletonType.Text" Width="90px" Height="14px" />
-                </div>
-            </MudPaper>
-            <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__stat gmm-dash__stat--skeleton">
-                <MudSkeleton Type="SkeletonType.Circle" Width="34px" Height="34px" />
-                <div>
-                    <MudSkeleton Type="SkeletonType.Text" Width="130px" Height="24px" />
-                    <MudSkeleton Type="SkeletonType.Text" Width="90px" Height="14px" />
-                </div>
-            </MudPaper>
+            @for (var i = 0; i < 4; i++)
+            {
+                <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__stat gmm-dash__stat--skeleton">
+                    <MudSkeleton Variant="SkeletonVariant.Circle" Width="44px" Height="44px" />
+                    <div class="d-flex flex-column" style="gap: 6px;">
+                        <MudSkeleton Width="90px" Height="12px" />
+                        <MudSkeleton Width="130px" Height="22px" />
+                    </div>
+                </MudPaper>
+            }
         </div>
-        <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
-            <MudSkeleton Type="SkeletonType.Text" Width="180px" Height="22px" />
-            <MudSkeleton Type="SkeletonType.Rectangle" Height="280px" Class="gmm-dash__chart-skeleton" />
-        </MudPaper>
+        <div class="gmm-dash__charts">
+            @for (var i = 0; i < 2; i++)
+            {
+                <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
+                    <MudSkeleton Width="160px" Height="20px" />
+                    <MudSkeleton Width="220px" Height="12px" Class="mt-1" />
+                    <MudSkeleton Height="240px" Class="gmm-dash__chart-skeleton" />
+                </MudPaper>
+            }
+        </div>
     }
     else if (_errorMessage is not null)
     {
@@ -50,46 +56,94 @@
     else if (_model is not null)
     {
         <div class="gmm-dash__stats">
-            <div class="gmm-dash__stat">
-                <MudIcon Icon="@Icons.Material.Filled.People" Class="gmm-dash__stat-icon gmm-dash__stat-icon--violet" />
-                <div>
-                    <MudText Typo="Typo.h6" Class="gmm-dash__stat-value gmm-dash__stat-value--violet">@_model.TotalMembers.ToString("N0")</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Total Members</MudText>
+            <div class="gmm-dash__stat gmm-dash__stat--violet">
+                <div class="gmm-dash__stat-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.People" />
+                </div>
+                <div class="gmm-dash__stat-body">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary gmm-dash__stat-label">Total Members</MudText>
+                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value">@_model.TotalMembers.ToString("N0")</MudText>
+                    @if (_memberDelta != 0)
+                    {
+                        <MudText Typo="Typo.caption" Class="@GetMemberTrendClass()">
+                            <MudIcon Icon="@(_memberDelta > 0 ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)" Size="MudBlazor.Size.Small" />
+                            @Math.Abs(_memberDelta).ToString("N0") this month
+                        </MudText>
+                    }
                 </div>
             </div>
-            <div class="gmm-dash__stat">
-                <MudIcon Icon="@Icons.Material.Filled.Paid" Class="gmm-dash__stat-icon gmm-dash__stat-icon--amber" />
-                <div>
-                    <MudText Typo="Typo.h6" Class="gmm-dash__stat-value gmm-dash__stat-value--amber">@_model.TodayIncome.ToString("C2")</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Today's Income</MudText>
+
+            <div class="gmm-dash__stat gmm-dash__stat--green">
+                <div class="gmm-dash__stat-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.Paid" />
+                </div>
+                <div class="gmm-dash__stat-body">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary gmm-dash__stat-label">Today's Income</MudText>
+                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value">@_model.TodayIncome.ToString("C2")</MudText>
+                </div>
+            </div>
+
+            <div class="gmm-dash__stat gmm-dash__stat--blue">
+                <div class="gmm-dash__stat-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+                </div>
+                <div class="gmm-dash__stat-body">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary gmm-dash__stat-label">Monthly Revenue</MudText>
+                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value">@_model.MonthlyRevenue.ToString("C2")</MudText>
+                    @if (_revenueTrendPercent is { } pct)
+                    {
+                        <MudText Typo="Typo.caption" Class="@GetRevenueTrendClass()">
+                            <MudIcon Icon="@(pct >= 0 ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)" Size="MudBlazor.Size.Small" />
+                            @Math.Abs(pct).ToString("0.0")% vs last month
+                        </MudText>
+                    }
+                </div>
+            </div>
+
+            <div class="gmm-dash__stat gmm-dash__stat--amber">
+                <div class="gmm-dash__stat-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.Star" />
+                </div>
+                <div class="gmm-dash__stat-body">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary gmm-dash__stat-label">Most Popular Plan</MudText>
+                    <MudText Typo="Typo.h5" Class="gmm-dash__stat-value gmm-dash__stat-value--plan">@_topPlanName</MudText>
+                    @if (_topPlanCount > 0)
+                    {
+                        <MudText Typo="Typo.caption" Class="gmm-dash__trend gmm-dash__trend--neutral">
+                            <MudIcon Icon="@Icons.Material.Filled.Group" Size="MudBlazor.Size.Small" />
+                            @_topPlanCount.ToString("N0") members
+                        </MudText>
+                    }
                 </div>
             </div>
         </div>
 
-        <MudGrid Class="gmm-dash__grid-tight">
-            <MudItem xs="12" md="4">
+        <MudGrid>
+            <MudItem xs="12" md="6">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
-                    <MudText Typo="Typo.subtitle1" Class="gmm-dash__card-title">Member Growth</MudText>
-                    <MudText Typo="Typo.caption" Class="gmm-dash__card-subtitle">Total members over the last 6 months</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_memberGrowthOptions" Height="140">
+                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Member Growth</MudText>
+                    <MudText Typo="Typo.body2" Class="gmm-dash__card-subtitle">Total members over the last 6 months</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_memberGrowthOptions" Height="260">
                         <ApexPointSeries TItem="ChartPoint" Items="_memberGrowthPoints" Name="Total Members"
                                          SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
                 </MudPaper>
             </MudItem>
-            <MudItem xs="12" md="4">
+            <MudItem xs="12" md="6">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
-                    <MudText Typo="Typo.subtitle1" Class="gmm-dash__card-title">Monthly Revenue Trend</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_revenueTrendOptions" Height="110">
+                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Monthly Revenue Trend</MudText>
+                    <MudText Typo="Typo.body2" Class="gmm-dash__card-subtitle">Revenue earned per month</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_revenueTrendOptions" Height="260">
                         <ApexPointSeries TItem="ChartPoint" Items="_revenueTrendPoints" Name="Revenue"
                                          SeriesType="SeriesType.Line" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
                 </MudPaper>
             </MudItem>
-            <MudItem xs="12" md="4">
+            <MudItem xs="12">
                 <MudPaper Elevation="0" Outlined="true" Class="gmm-dash__card">
-                    <MudText Typo="Typo.subtitle1" Class="gmm-dash__card-title">Most Used Plans</MudText>
-                    <ApexChart TItem="ChartPoint" Options="_planUsageOptions" Height="110">
+                    <MudText Typo="Typo.h6" Class="gmm-dash__card-title">Most Used Plans</MudText>
+                    <MudText Typo="Typo.body2" Class="gmm-dash__card-subtitle">Members per plan, ranked</MudText>
+                    <ApexChart TItem="ChartPoint" Options="_planUsageOptions" Height="220">
                         <ApexPointSeries TItem="ChartPoint" Items="_planUsagePoints" Name="Members"
                                          SeriesType="SeriesType.Bar" XValue="e => e.X" YValue="e => e.Y" />
                     </ApexChart>
@@ -116,6 +170,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        margin-bottom: 20px;
     }
 
     .gmm-dash__title {
@@ -128,38 +183,66 @@
         text-wrap: pretty;
     }
 
+    .gmm-dash__refresh {
+        border-radius: 8px;
+    }
+
     .gmm-dash__stats {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
         gap: 16px;
-        margin: 4px 0;
+        margin-bottom: 16px;
     }
 
     .gmm-dash__stat {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 6px 10px;
-        border-radius: 12px;
+        gap: 14px;
+        padding: 18px 20px;
+        border-radius: 14px;
         border: 1px solid var(--mud-palette-lines-default);
         background-color: var(--mud-palette-surface);
-        min-width: 240px;
     }
 
     .gmm-dash__stat--skeleton {
-        min-width: 260px;
+        min-height: 84px;
     }
 
     .gmm-dash__stat-icon {
-        font-size: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        flex: 0 0 44px;
     }
 
-    .gmm-dash__stat-icon--violet {
-        color: #6D28D9;
+    .gmm-dash__stat--violet .gmm-dash__stat-icon {
+        background-color: rgba(124, 58, 237, 0.14);
+        color: #A78BFA;
     }
 
-    .gmm-dash__stat-icon--amber {
+    .gmm-dash__stat--green .gmm-dash__stat-icon {
+        background-color: rgba(16, 185, 129, 0.14);
+        color: #10B981;
+    }
+
+    .gmm-dash__stat--blue .gmm-dash__stat-icon {
+        background-color: rgba(59, 130, 246, 0.14);
+        color: #60A5FA;
+    }
+
+    .gmm-dash__stat--amber .gmm-dash__stat-icon {
+        background-color: rgba(245, 158, 11, 0.14);
         color: #F59E0B;
+    }
+
+    .gmm-dash__stat-body {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
 
     .gmm-dash__stat-value {
@@ -168,17 +251,36 @@
         font-variant-numeric: tabular-nums;
     }
 
-    .gmm-dash__stat-value--violet {
-        color: #6D28D9;
+    .gmm-dash__stat-value--plan {
+        font-size: 1.05rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .gmm-dash__stat-value--amber {
-        color: #F59E0B;
+    .gmm-dash__trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .gmm-dash__trend--up {
+        color: #10B981;
+    }
+
+    .gmm-dash__trend--down {
+        color: #EF4444;
+    }
+
+    .gmm-dash__trend--neutral {
+        color: var(--mud-palette-text-secondary);
     }
 
     .gmm-dash__card {
-        border-radius: 12px;
-        padding: 8px 8px 0;
+        border-radius: 14px;
+        padding: 20px 20px 8px;
         height: 100%;
     }
 
@@ -190,10 +292,6 @@
     .gmm-dash__card-subtitle {
         color: var(--mud-palette-text-secondary);
         margin-bottom: 8px;
-    }
-
-    .gmm-dash__grid-tight {
-        gap: 8px !important;
     }
 
     .gmm-dash__chart-skeleton {
